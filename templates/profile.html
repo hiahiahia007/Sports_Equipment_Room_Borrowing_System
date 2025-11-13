@@ -1,0 +1,68 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="row">
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <h4>个人中心 — {{ user.username }}</h4>
+              <p class="text-muted mb-1">{{ user.full_name or '' }} · {{ user.class_name or '' }} · {{ user.gender or '' }}</p>
+              <div class="small text-muted">联系电话：{{ user.phone or '-' }}</div>
+            </div>
+            <div class="text-end">
+              <a class="btn btn-sm btn-outline-secondary me-2" href="/export_my_records">导出我的记录</a>
+              <a class="btn btn-sm btn-outline-primary" href="/profile/edit">编辑资料</a>
+            </div>
+          </div>
+          <div class="row my-3">
+            <div class="col-auto">
+              <div class="card p-2 text-center">
+                <div class="small text-muted">总借阅次数</div>
+                <div class="h5 mb-0">{{ total_borrows }}</div>
+              </div>
+            </div>
+            <div class="col-auto">
+              <div class="card p-2 text-center">
+                <div class="small text-muted">未归还</div>
+                <div class="h5 mb-0 text-warning">{{ outstanding }}</div>
+              </div>
+            </div>
+          </div>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle">
+            <thead class="table-light"><tr><th>时间</th><th>设备</th><th>数量</th><th>状态</th><th></th></tr></thead>
+            <tbody>
+              {% for r in borrows %}
+              <tr>
+                <td class="small text-muted">{{ r.borrow_date }}</td>
+                <td>{{ r.equipment.name if r.equipment else '已删除' }}</td>
+                <td>{{ r.quantity }}</td>
+                <td>
+                  {% if r.return_date %}
+                    <span class="badge bg-success">已归还</span>
+                  {% else %}
+                    <span class="badge bg-warning text-dark">未归还</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if not r.return_date %}
+                    <form method="post" action="/return" class="d-inline">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <input type="hidden" name="record_id" value="{{ r.id }}">
+                      <button class="btn btn-sm btn-outline-success"><i class="bi bi-arrow-return-left"></i> 归还</button>
+                    </form>
+                  {% else %}
+                  <span class="text-muted small">{{ r.return_date }}</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

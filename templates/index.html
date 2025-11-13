@@ -1,0 +1,98 @@
+{% extends 'layout.html' %}
+{% block content %}
+  <div class="row g-4">
+    <div class="col-lg-6">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">设备列表</h5>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+              <thead class="table-light"><tr><th>名称</th><th>总量</th><th>可借</th><th>操作</th></tr></thead>
+              <tbody>
+                {% for e in equipments %}
+                <tr>
+                  <td class="fw-semibold">{{ e.name }}</td>
+                  <td>{{ e.total_quantity }}</td>
+                  <td>
+                    {% if e.available_quantity > 0 %}
+                      <span class="badge bg-success">{{ e.available_quantity }}</span>
+                    {% else %}
+                      <span class="badge bg-secondary">0</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if e.available_quantity > 0 %}
+                    <form method="post" action="/borrow" class="d-flex gap-2 align-items-center">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <input type="hidden" name="equipment_id" value="{{ e.id }}">
+                      <input type="text" name="user_name" placeholder="姓名" class="form-control form-control-sm" required style="width:120px;">
+                      <input type="number" name="quantity" value="1" min="1" max="{{ e.available_quantity }}" class="form-control form-control-sm" style="width:80px;">
+                      <button class="btn btn-sm btn-primary" type="submit">借出</button>
+                    </form>
+                    {% else %}
+                      <small class="text-muted">无库存</small>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card shadow-sm mb-3">
+        <div class="card-body">
+          <h5 class="card-title">添加设备</h5>
+          <form method="post" action="/add_equipment" class="row gx-2 gy-2 align-items-center">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="col-auto">
+              <input type="text" name="name" placeholder="设备名" class="form-control" required>
+            </div>
+            <div class="col-auto">
+              <input type="number" name="total" value="1" min="1" class="form-control" style="width:100px;">
+            </div>
+            <div class="col-auto">
+              <button class="btn btn-success">添加</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">借出记录</h5>
+          <div class="table-responsive">
+            <table class="table table-sm mb-0">
+              <thead class="table-light"><tr><th>时间</th><th>设备</th><th>借用人</th><th>数量</th><th>归还</th><th></th></tr></thead>
+              <tbody>
+                {% for r in borrows %}
+                <tr>
+                  <td class="small text-muted">{{ r.borrow_date }}</td>
+                  <td>{{ r.equipment.name if r.equipment else '已删除' }}</td>
+                  <td>{{ r.user_name }}</td>
+                  <td>{{ r.quantity }}</td>
+                  <td>{{ r.return_date or '' }}</td>
+                  <td>
+                    {% if not r.return_date %}
+                    <form method="post" action="/return">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <input type="hidden" name="record_id" value="{{ r.id }}">
+                      <button class="btn btn-sm btn-outline-secondary" type="submit">归还</button>
+                    </form>
+                    {% else %}
+                      <span class="text-muted small">已归还</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

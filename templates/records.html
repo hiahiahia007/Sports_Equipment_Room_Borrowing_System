@@ -1,0 +1,65 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">借阅记录</h4>
+  <div>
+    <a class="btn btn-sm btn-outline-primary me-2" href="?status=all">全部</a>
+    <a class="btn btn-sm btn-outline-success me-2" href="?status=returned">已归还</a>
+    <a class="btn btn-sm btn-outline-warning me-2" href="?status=outstanding">未归还</a>
+    {% if current_user and not current_user.is_admin %}
+      <a class="btn btn-sm btn-outline-secondary" href="/export_my_records">导出我的记录</a>
+    {% else %}
+      <a class="btn btn-sm btn-outline-secondary" href="/export_records">导出全部记录</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>时间</th>
+            <th>设备</th>
+            {% if current_user and current_user.is_admin %}<th>借用人</th>{% endif %}
+            <th>数量</th>
+            <th>状态</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in borrows %}
+          <tr>
+            <td class="small text-muted">{{ r.borrow_date }}</td>
+            <td>{{ r.equipment.name if r.equipment else '已删除' }}</td>
+            {% if current_user and current_user.is_admin %}
+            <td>{{ r.user_name }}</td>
+            {% endif %}
+            <td>{{ r.quantity }}</td>
+            <td>
+              {% if r.return_date %}
+                <span class="badge bg-success">已归还</span>
+              {% else %}
+                <span class="badge bg-warning text-dark">未归还</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if not r.return_date %}
+              <form method="post" action="/return" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="record_id" value="{{ r.id }}">
+                <button class="btn btn-sm btn-outline-success"><i class="bi bi-arrow-return-left"></i> 归还</button>
+              </form>
+              {% else %}
+              <span class="text-muted small">{{ r.return_date }}</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

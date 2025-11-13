@@ -1,0 +1,169 @@
+:root{
+	/* Tech-dark design tokens (default dark theme) */
+	--bg: #071025; /* deep navy */
+	--surface: #0b1220; /* card surface */
+	--muted: #94a3b8; /* grayish */
+	--text: #e6eef8; /* light text */
+	--primary: #00d4ff; /* neon cyan */
+	--primary-2: #4dd0e1; /* secondary cyan */
+	--accent: #7c3aed; /* purple accent */
+	--border: rgba(255,255,255,0.06);
+	--shadow: 0 8px 30px rgba(2,6,23,0.6);
+	--radius: 12px;
+	--glass: rgba(255,255,255,0.03);
+}
+
+/* Light theme override (applied when .light-theme is present on root) */
+.light-theme{
+	--bg: #f6f8fa; /* page background */
+	--surface: #ffffff; /* card background */
+	--muted: #6b7280; /* gray-500 */
+	--text: #0f1724; /* dark text */
+	--primary: #0b5fff; /* strong blue */
+	--primary-2: #2563eb; /* darker blue */
+	--accent: #06b6d4; /* cyan */
+	--border: #e6eef8; /* light border */
+	--shadow: 0 6px 20px rgba(37,99,235,0.08);
+	--radius: 10px;
+	--glass: rgba(255,255,255,0.65);
+}
+*{box-sizing:border-box}
+html,body{height:100%;font-family:'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;}
+body{
+	background: radial-gradient(1200px 600px at 10% 10%, rgba(0,212,255,0.04), transparent), var(--bg);
+	color:var(--text);
+	-webkit-font-smoothing:antialiased;
+	-moz-osx-font-smoothing:grayscale;
+	padding:18px 0 80px;
+}
+.brand-text{font-family:'Orbitron',sans-serif;letter-spacing:0.6px}
+h1,h2,h3,h4{font-family:'Orbitron',sans-serif}
+.container{max-width:1180px;margin:0 auto}
+
+/* Theme toggle button */
+#theme-toggle-btn{min-width:44px;display:inline-flex;align-items:center;justify-content:center}
+
+/* Navbar tweaks */
+.navbar{background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);backdrop-filter:blur(6px);border-bottom:1px solid rgba(255,255,255,0.02)}
+.navbar .brand-text{font-weight:700;color:var(--text);font-family:'Orbitron',sans-serif}
+.navbar .search-input{border-radius:999px;border:1px solid var(--border);background:var(--glass);padding:6px 12px;color:var(--text)}
+.navbar .nav-link{color:var(--muted);font-weight:600}
+.navbar .navbar-brand .logo-mark{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;margin-right:8px;background:linear-gradient(135deg,var(--primary),var(--primary-2));box-shadow:0 6px 20px rgba(0,212,255,0.06);color:#021019}
+.small-search-icon{font-size:0.9rem}
+
+/* Global icon sizing - reduce oversize icons */
+.bi { font-size: 0.95rem; }
+
+/* Hero premium tweaks */
+.hero{background:linear-gradient(135deg, rgba(11,95,255,0.08), rgba(6,182,212,0.04));padding:40px 36px;border-radius:16px;border:1px solid rgba(11,95,255,0.06);box-shadow:0 18px 60px rgba(11,95,255,0.07);position:relative;overflow:hidden}
+.hero h1{font-size:2.6rem;letter-spacing:0.2px;margin-bottom:10px}
+.hero p.lead{font-size:1.05rem;color:var(--muted);max-width:58%}
+.hero img{max-width:220px;border-radius:10px;box-shadow:0 12px 30px rgba(2,6,23,0.06)}
+
+/* decorative soft blob */
+.hero::after{content:'';position:absolute;width:420px;height:420px;right:-100px;top:-120px;background:radial-gradient(circle at 30% 30%, rgba(6,182,212,0.18), rgba(11,95,255,0.06) 40%, transparent 60%);filter:blur(30px);opacity:0.9}
+
+/* brand icon smaller and refined */
+.navbar .navbar-brand i{font-size:1rem}
+.hero .btn-primary{padding:10px 18px;font-weight:700}
+
+/* Card image area for catalog */
+.catalog-card .ratio{background:linear-gradient(180deg, rgba(15,23,36,0.02), rgba(15,23,36,0.01));}
+.catalog-card .card-body{padding:1rem}
+.catalog-card .card-title{font-size:1.05rem}
+.catalog-card .card-text{color:var(--muted);font-size:0.95rem}
+.catalog-card .btn{font-size:0.9rem}
+
+/* reduce button icon sizes inside cards */
+.catalog-card .bi { font-size:0.85rem }
+
+/* subtle entrance animation for cards */
+@keyframes cardFadeUp { from { transform: translateY(6px); opacity:0 } to { transform: translateY(0); opacity:1 } }
+.catalog-card { animation: cardFadeUp .28s ease both }
+
+/* Top navigation */
+.navbar{background:transparent}
+.navbar .navbar-brand{font-weight:600;color:var(--text)}
+
+/* Hero */
+.hero{background:linear-gradient(90deg, rgba(11,95,255,0.06), rgba(6,182,212,0.04));padding:22px;border-radius:12px;border:1px solid var(--border);box-shadow:var(--shadow);}
+.hero h1{font-weight:700;color:var(--text);margin-bottom:8px;font-size:1.6rem}
+.hero p.lead{color:var(--muted);margin-bottom:0}
+
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);transition:transform .18s ease,box-shadow .18s ease;padding:0}
+.card:hover{transform:translateY(-6px);box-shadow:var(--shadow)}
+.card .card-header{padding:12px 16px;border-bottom:1px solid var(--border);background:linear-gradient(90deg,rgba(11,95,255,0.02),transparent)}
+
+/* Disable hover lift inside admin card (table interactions shouldn't cause parent lift) */
+.admin-card:hover{transform:none;box-shadow:none}
+
+/* Highlight used for newly added rows without affecting layout */
+.row-highlight{background:linear-gradient(90deg, rgba(11,95,255,0.06), rgba(11,95,255,0.03));box-shadow:0 4px 12px rgba(11,95,255,0.06);transition:background-color .22s ease, box-shadow .22s ease}
+.card .card-body{padding:1rem}
+.card-title{color:var(--text);font-weight:600}
+
+/* Form and input polish */
+.form-control, .search-input{background:linear-gradient(180deg, var(--glass), transparent);border:1px solid var(--border);box-shadow:none;border-radius:999px;padding:8px 14px}
+.form-control:focus{outline:none;border-color:rgba(11,95,255,0.22);box-shadow:0 6px 20px rgba(37,99,235,0.06)}
+.btn-primary{background:linear-gradient(90deg,var(--primary),var(--primary-2));border:none;color:#fff;padding:10px 16px}
+.btn:hover{transform:translateY(-2px)}
+
+/* Neon-ish focus for primary */
+.btn-primary:focus, .btn-primary:active{box-shadow:0 6px 30px rgba(0,212,255,0.18);outline:none}
+
+/* Footer */
+.site-footer{color:var(--muted);background:transparent;padding-top:18px;padding-bottom:40px}
+.site-footer small{color:var(--muted)}
+
+/* Cards grid for catalog */
+.catalog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px}
+
+/* subtle focus for interactive rows */
+a.btn, button{transition:all .18s ease}
+
+/* accessibility helpers */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* Catalog */
+.search-bar{background:transparent;padding:6px;border-radius:10px}
+.form-control{background:transparent;border:1px solid var(--border);color:var(--text)}
+.form-control::placeholder{color:var(--muted)}
+.form-control:focus{box-shadow:none;border-color:rgba(11,95,255,0.25)}
+.btn-primary{background:linear-gradient(90deg,var(--primary),var(--primary-2));border:none;color:#fff}
+.btn-outline-secondary{border-color:var(--border);color:var(--muted);background:transparent}
+
+/* Tables */
+.table thead th{background:transparent;color:var(--muted);border-bottom:1px solid var(--border)}
+.table tbody tr:hover{background:rgba(11,95,255,0.02)}
+.table td{vertical-align:middle}
+
+/* Badges */
+.badge-success{background:#d1fae5;color:#065f46}
+.badge-warning{background:#fff7ed;color:#92400e}
+
+/* Utilities */
+.muted{color:var(--muted)}
+.glass{background:var(--surface);border-radius:10px;padding:10px;border:1px solid var(--border)}
+
+@media (max-width:768px){
+	.hero{padding:18px}
+	.card{border-radius:10px}
+}
+
+/* New layout overrides for Bootstrap-based UI */
+/* New layout overrides for Bootstrap-based UI */
+body { font-family: 'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+.container { max-width: 1200px; }
+.card { border-radius: 10px; overflow: hidden }
+.card-title { margin-bottom: 0.5rem; }
+.badge { font-size: 0.9em; }
+.table thead th { border-bottom: 1px solid #e9ecef; }
+
+/* flash container spacing */
+#flash-container { position: relative; z-index: 50; }
+
+/* small responsive tweaks */
+@media (max-width: 576px) {
+	input[type=text], input[type=number] { width: 100% !important; margin-bottom: 6px; }
+}

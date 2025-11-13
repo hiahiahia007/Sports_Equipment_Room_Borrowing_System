@@ -1,0 +1,99 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="row align-items-center mb-4">
+  <div class="col-md-8">
+    <h4 class="mb-0">器材目录</h4>
+    <div class="text-muted small">查找并借出你需要的体育器材</div>
+  </div>
+  <div class="col-md-4">
+    <form method="get" action="/catalog" class="d-flex">
+      <div class="input-group search-bar w-100">
+        <span class="input-group-text bg-transparent border-0"><i class="bi bi-search text-muted"></i></span>
+        <input name="q" value="{{ q }}" class="form-control" placeholder="搜索设备（例如：足球、羽毛球）">
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
+  {% for e in equipments %}
+  <div class="col">
+    <div class="card h-100 catalog-card">
+      <div class="ratio ratio-4x3 rounded-top overflow-hidden img-wrap">
+        <!-- simple gradient placeholder image to be replaced by real images later -->
+  <svg class="w-100 h-100" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <linearGradient id="g{{ e.id }}" x1="0" x2="1" y1="0" y2="1">
+              <stop offset="0%" stop-color="#eef6ff" />
+              <stop offset="100%" stop-color="#f0f8ff" />
+            </linearGradient>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#g{{ e.id }})"></rect>
+          <text x="50%" y="50%" fill="#475569" dominant-baseline="middle" text-anchor="middle" font-size="20">{{ e.name }}</text>
+        </svg>
+      </div>
+      <div class="card-body d-flex flex-column">
+        <h5 class="card-title">{{ e.name }}</h5>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div class="small muted">总量: {{ e.total_quantity }}</div>
+          <div class="fw-semibold">可借: <span class="text-primary">{{ e.available_quantity }}</span></div>
+        </div>
+        <div class="mt-auto d-flex gap-2 align-items-center">
+          <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('equipment_detail', equipment_id=e.id) }}"><i class="bi bi-eye"></i></a>
+          {% if e.available_quantity > 0 %}
+          <button class="btn btn-primary btn-sm ms-auto" style="padding:6px 10px" data-bs-toggle="modal" data-bs-target="#borrowModal{{ e.id }}"><i class="bi bi-box-arrow-up-right"></i> <span class="d-none d-md-inline">借用</span></button>
+          {% else %}
+          <span class="badge badge-warning ms-auto">无库存</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Borrow modal for equipment -->
+  <div class="modal fade" id="borrowModal{{ e.id }}" tabindex="-1" aria-labelledby="borrowModalLabel{{ e.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+      <div class="modal-content">
+        <form method="post" action="/borrow">
+          <div class="modal-header">
+            <h5 class="modal-title" id="borrowModalLabel{{ e.id }}">借用：{{ e.name }}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="equipment_id" value="{{ e.id }}">
+            {% if current_user %}
+              <input type="hidden" name="user_name" value="{{ current_user.username }}">
+              <div class="mb-2">借用人：<strong>{{ current_user.username }}</strong></div>
+            {% else %}
+              <div class="alert alert-info mb-2">请先 <a href="{{ url_for('login', next=request.path) }}">登录</a> 后借用本器材。</div>
+            {% endif %}
+            <div class="mb-2">
+              <label class="form-label">数量（最大 {{ e.available_quantity }})</label>
+              <input type="number" name="quantity" class="form-control" value="1" min="1" max="{{ e.available_quantity }}">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+            <button type="submit" class="btn btn-primary">确认借用</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  {% endfor %}
+</div>
+
+<div class="mt-4 d-flex justify-content-center">
+  <nav aria-label="Page navigation">
+    <ul class="pagination pagination-sm">
+      {% set last = (total//per_page) + (1 if total%per_page else 0) %}
+      <li class="page-item {% if page<=1 %}disabled{% endif %}"><a class="page-link" href="?q={{ q }}&page={{ page-1 }}">«</a></li>
+      <li class="page-item disabled"><span class="page-link">第 {{ page }} 页 / 共 {{ last }} 页</span></li>
+      <li class="page-item {% if page>=last %}disabled{% endif %}"><a class="page-link" href="?q={{ q }}&page={{ page+1 }}">»</a></li>
+    </ul>
+  </nav>
+</div>
+
+{% endblock %}

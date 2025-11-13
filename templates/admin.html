@@ -1,0 +1,136 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="card admin-card">
+  <div class="card-body">
+    <h4 class="card-title">管理员</h4>
+    {% if not is_admin %}
+    <p>请输入管理员密码以进入管理界面。</p>
+    <form method="post" action="/admin" class="row g-2 align-items-center">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="col-auto">
+        <input type="password" name="password" class="form-control" placeholder="管理员密码">
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-primary">登录</button>
+      </div>
+    </form>
+    {% else %}
+    <p>你已登录为管理员，可执行管理操作。</p>
+    <div class="row">
+      <div class="col-md-6">
+        <h5 class="mt-3">新增设备</h5>
+        <!-- Button trigger modal -->
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addEquipModal">
+          <i class="bi bi-plus-lg"></i> 添加设备
+        </button>
+
+        <!-- Modal -->
+        <div class="modal fade" id="addEquipModal" tabindex="-1" aria-labelledby="addEquipModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="addEquipModalLabel">新增设备</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <form method="post" action="/add_equipment">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-body">
+                  <div class="mb-2">
+                    <label class="form-label small">设备名</label>
+                    <input type="text" name="name" class="form-control" placeholder="例如：篮球" required>
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label small">数量</label>
+                    <input type="number" name="total" class="form-control" value="1" min="1">
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                  <button type="submit" class="btn btn-primary">确认添加</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h5 class="mt-4">设备管理</h5>
+    <div class="table-responsive">
+      <table class="table table-sm align-middle">
+        <thead class="table-light"><tr><th>名称</th><th style="width:140px;">总量（编辑）</th><th style="width:120px;">可借</th><th style="width:140px;">操作</th></tr></thead>
+        <tbody>
+          {% for e in equipments %}
+          <tr id="e{{ e.id }}">
+            <td>{{ e.name }}</td>
+            <td>
+              <form method="post" action="/admin/edit_equipment/{{ e.id }}" class="d-flex gap-2">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="number" name="total" class="form-control form-control-sm" value="{{ e.total_quantity }}" style="width:100px;">
+                <button class="btn btn-sm btn-outline-primary"><i class="bi bi-save"></i> 保存</button>
+              </form>
+            </td>
+            <td><span class="fw-bold">{{ e.available_quantity }}</span></td>
+            <td>
+              <form method="post" action="/admin/delete_equipment/{{ e.id }}" onsubmit="return confirm('确认删除该设备？');" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> 删除</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    
+    <h5 class="mt-4">注册用户</h5>
+    <form class="row g-2 mb-3" method="get" action="{{ url_for('admin') }}">
+      <div class="col-auto">
+        <input class="form-control form-control-sm" name="q" placeholder="搜索用户 名称/用户名/班级" value="{{ request.args.get('q','') }}">
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-sm btn-outline-primary">搜索</button>
+      </div>
+    </form>
+    <div class="table-responsive">
+      <table class="table table-sm align-middle">
+        <thead class="table-light"><tr><th>用户名</th><th>姓名</th><th>班级</th><th>性别</th><th>电话</th><th>操作</th></tr></thead>
+        <tbody>
+          {% for u in users %}
+          <tr>
+            <td>{{ u.username }}</td>
+            <td>{{ u.full_name or '-' }}</td>
+            <td>{{ u.class_name or '-' }}</td>
+            <td>{{ u.gender or '-' }}</td>
+            <td>{{ u.phone or '-' }}</td>
+            <td>
+              <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin_view_user', user_id=u.id) }}">查看记录</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- If an equipment was just added, highlight it and scroll into view -->
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  try{
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('added_id');
+    if(id){
+      const row = document.getElementById('e' + id);
+      if(row){
+        row.classList.add('row-highlight');
+        row.scrollIntoView({behavior: 'smooth', block: 'center'});
+        setTimeout(()=> row.classList.remove('table-success'), 4000);
+      }
+    }
+  }catch(e){/* ignore */}
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>校园体育器材借阅室 - 高级版</title>
+  <!-- 引入外部资源 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+  
+  <!-- Tailwind 配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#0F4C81', // 深海军蓝（更高级的主色调）
+            secondary: '#FF6B35', // 活力橙红
+            accent: '#3E92CC', // 亮蓝点缀
+            dark: '#1A202C',
+            light: '#F8FAFC'
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          boxShadow: {
+            'elevation-1': '0 2px 8px rgba(0, 0, 0, 0.08)',
+            'elevation-2': '0 4px 16px rgba(0, 0, 0, 0.12)',
+            'elevation-3': '0 8px 24px rgba(0, 0, 0, 0.16)',
+          }
+        },
+      }
+    }
+  </script>
+  
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .text-shadow {
+        text-shadow: 0 2px 4px rgba(0,0,0,0.15);
+      }
+      .card-hover {
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .card-hover:hover {
+        transform: translateY(-6px);
+      }
+      .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+      }
+      .bg-glass {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      }
+      .gradient-overlay {
+        background: linear-gradient(to bottom, rgba(15, 76, 129, 0) 0%, rgba(15, 76, 129, 0.8) 100%);
+      }
+      .btn-gradient {
+        background: linear-gradient(135deg, #0F4C81 0%, #3E92CC 100%);
+      }
+      .btn-gradient-hover {
+        background: linear-gradient(135deg, #0D426F 0%, #3482B4 100%);
+      }
+      .animate-float {
+        animation: float 6s ease-in-out infinite;
+      }
+      @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+        100% { transform: translateY(0px); }
+      }
+    }
+  </style>
+</head>
+
+<body class="font-inter bg-light text-dark antialiased">
+  <!-- 顶部导航栏（玻璃拟态） -->
+  <header id="navbar" class="fixed w-full top-0 z-50 transition-all duration-300 bg-glass shadow-elevation-1">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-18">
+        <!-- 左侧Logo和名称 -->
+        <div class="flex items-center">
+          <div class="flex-shrink-0 flex items-center">
+            <i class="fa fa-futbol-o text-primary text-2xl mr-2 transition-transform hover:rotate-12 duration-500"></i>
+            <span class="text-xl font-bold text-primary tracking-tight">体育器材借阅室</span>
+          </div>
+        </div>
+        
+        <!-- 中间导航链接 - 仅在中等屏幕以上显示 -->
+        <nav class="hidden md:flex space-x-10">
+          <a href="#home" class="text-primary font-medium hover:text-accent transition-colors relative group">
+            首页
+            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-accent transition-all duration-300 group-hover:w-full"></span>
+          </a>
+          <a href="#equipment" class="text-gray-700 font-medium hover:text-accent transition-colors relative group">
+            器材列表
+            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-accent transition-all duration-300 group-hover:w-full"></span>
+          </a>
+          <a href="#process" class="text-gray-700 font-medium hover:text-accent transition-colors relative group">
+            借阅流程
+            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-accent transition-all duration-300 group-hover:w-full"></span>
+          </a>
+          <a href="#stats" class="text-gray-700 font-medium hover:text-accent transition-colors relative group">
+            使用统计
+            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-accent transition-all duration-300 group-hover:w-full"></span>
+          </a>
+        </nav>
+        
+        <!-- 右侧用户区域 -->
+        <div class="flex items-center space-x-6">
+          <div class="relative hidden sm:block w-64">
+            <input type="text" placeholder="搜索器材..." class="w-full pl-10 pr-4 py-2 rounded-full bg-gray-100 border border-gray-200 focus:ring-2 focus:ring-accent/30 focus:border-accent outline-none transition-all placeholder:text-gray-400">
+            <i class="fa fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+          </div>
+          
+          <div class="relative" id="userMenu">
+            <button class="flex items-center space-x-2 focus:outline-none" id="userButton">
+              <div class="relative">
+                <img src="https://picsum.photos/id/64/44/44" alt="用户头像" class="w-10 h-10 rounded-full object-cover border-2 border-primary/20 shadow-elevation-1">
+                <span class="absolute bottom-0 right-0 w-3 h-3 bg-success rounded-full border-2 border-white"></span>
+              </div>
+              <span class="hidden sm:inline text-sm font-medium text-gray-800">学生用户</span>
+              <i class="fa fa-angle-down text-gray-500 transition-transform duration-300" id="dropdownIcon"></i>
+            </button>
+            
+            <!-- 用户下拉菜单（玻璃拟态） -->
+            <div class="absolute right-0 mt-3 w-56 bg-glass rounded-xl shadow-elevation-2 py-2 hidden" id="userDropdown">
+              <a href="#profile" class="block px-5 py-3 text-sm text-gray-700 hover:bg-primary/5 hover:text-primary flex items-center transition-colors">
+                <i class="fa fa-user mr-3 w-4 text-center"></i>个人中心
+              </a>
+              <a href="#borrowed" class="block px-5 py-3 text-sm text-gray-700 hover:bg-primary/5 hover:text-primary flex items-center transition-colors">
+                <i class="fa fa-history mr-3 w-4 text-center"></i>我的借阅
+              </a>
+              <a href="#settings" class="block px-5 py-3 text-sm text-gray-700 hover:bg-primary/5 hover:text-primary flex items-center transition-colors">
+                <i class="fa fa-cog mr-3 w-4 text-center"></i>设置
+              </a>
+              <div class="border-t border-gray-200 my-1 mx-4"></div>
+              <a href="#" class="block px-5 py-3 text-sm text-secondary hover:bg-secondary/5 flex items-center transition-colors">
+                <i class="fa fa-sign-out mr-3 w-4 text-center"></i>退出登录
+              </a>
+            </div>
+          </div>
+          
+          <!-- 移动端菜单按钮 -->
+          <button type="button" class="md:hidden text-gray-700 hover:text-primary" id="mobileMenuButton">
+            <i class="fa fa-bars text-xl"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 移动端导航菜单 -->
+    <div class="md:hidden hidden bg-white border-t border-gray-100 shadow-elevation-1" id="mobileMenu">
+      <div class="px-4 pt-4 pb-6 space-y-1">
+        <a href="#home" class="block px-4 py-3 rounded-lg text-base font-medium text-primary bg-primary/5">
+          <i class="fa fa-home mr-3"></i>首页
+        </a>
+        <a href="#equipment" class="block px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-primary/5 hover:text-primary">
+          <i class="fa fa-list mr-3"></i>器材列表
+        </a>
+        <a href="#process" class="block px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-primary/5 hover:text-primary">
+          <i class="fa fa-tasks mr-3"></i>借阅流程
+        </a>
+        <a href="#stats" class="block px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-primary/5 hover:text-primary">
+          <i class="fa fa-bar-chart mr-3"></i>使用统计
+        </a>
+        
+        <div class="relative mt-4 mb-2">
+          <input type="text" placeholder="搜索器材..." class="w-full pl-10 pr-4 py-2 rounded-lg bg-gray-100 border border-gray-200 focus:ring-2 focus:ring-accent/30 focus:border-accent outline-none transition-all">
+          <i class="fa fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+        </div>
+        
+        <div class="pt-4 border-t border-gray-200">
+          <div class="flex items-center px-4 mb-4">
+            <div class="relative">
+              <img class="h-12 w-12 rounded-full" src="https://picsum.photos/id/64/44/44" alt="用户头像">
+              <span class="absolute bottom-0 right-0 w-3 h-3 bg-success rounded-full border-2 border-white"></span>
+            </div>
+            <div class="ml-4">
+              <div class="text-base font-medium text-gray-800">学生用户</div>
+              <div class="text-sm font-medium text-gray-500">student@school.edu</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主内容区 -->
+  <main class="pt-18">
+    <!-- 英雄区域（高级渐变背景） -->
+    <section id="home" class="relative py-20 md:py-28 overflow-hidden">
+      <div class="absolute inset-0 z-0">
+        <img src="https://picsum.photos/id/1058/1920/1080" alt="背景" class="w-full h-full object-cover">
+        <div class="absolute inset-0 bg-gradient-to-r from-primary/95 to-primary/80"></div>
+      </div>
+      
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="flex flex-col md:flex-row items-center">
+          <div class="md:w-1/2 mb-10 md:mb-0 md:pr-8">
+            <h1 class="text-[clamp(2.2rem,5vw,3.8rem)] font-bold leading-tight text-white text-shadow mb-6 max-w-xl">
+              专业体育器材<br>便捷借阅体验
+            </h1>
+            <p class="text-lg md:text-xl text-white/90 mb-8 max-w-lg leading-relaxed">
+              精选50+类体育器材，定期维护保养，简单四步即可完成借阅，让运动无需等待。
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4">
+              <a href="#equipment" class="px-8 py-3.5 btn-gradient text-white font-medium rounded-full shadow-elevation-2 hover:btn-gradient-hover transition-all text-center transform hover:scale-105 active:scale-98">
+                浏览器材
+              </a>
+              <a href="#process" class="px-8 py-3.5 bg-transparent border-2 border-white/90 text-white font-medium rounded-full hover:bg-white/10 transition-all text-center">
+                了解流程
+              </a>
+            </div>
+            
+            <!-- 信任标识 -->
+            <div class="mt-12 flex items-center space-x-6 flex-wrap">
+              <div class="flex items-center">
+                <i class="fa fa-check-circle text-secondary text-xl mr-2"></i>
+                <span class="text-white/80">2000+ 优质器材</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fa fa-check-circle text-secondary text-xl mr-2"></i>
+                <span class="text-white/80">98% 完好率</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fa fa-check-circle text-secondary text-xl mr-2"></i>
+                <span class="text-white/80">5分钟 快速借阅</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="md:w-1/2 relative">
+            <div class="relative rounded-2xl overflow-hidden shadow-elevation-3 transform md:rotate-1 hover:rotate-0 transition-transform duration-700 animate-float">
+              <img src="https://picsum.photos/id/1058/600/400" alt="体育器材展示" class="w-full h-auto object-cover">
+              <div class="absolute inset-0 gradient-overlay"></div>
+              <div class="absolute bottom-0 left-0 p-6 text-white">
+                <span class="inline-block px-3 py-1 bg-secondary/90 rounded-full text-xs font-medium mb-3">热门推荐</span>
+                <h3 class="text-xl font-bold mb-1">专业运动装备</h3>
+                <p class="text-white/90 text-sm">满足各类运动需求</p>
+              </div>
+            </div>
+            
+            <!-- 装饰元素 -->
+            <div class="absolute -bottom-6 -right-6 w-32 h-32 bg-accent/20 rounded-full blur-2xl"></div>
+            <div class="absolute -top-6 -left-6 w-24 h-24 bg-secondary/20 rounded-full blur-2xl"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 快速数据统计（高级卡片） -->
+    <section class="py-14 bg-white">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div class="p-6 rounded-2xl bg-gray-50 shadow-elevation-1 hover:shadow-elevation-2 transition-shadow">
+            <div class="flex items-center mb-3">
+              <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary mr-4">
+                <i class="fa fa-cubes text-xl"></i>
+              </div>
+              <div>
+                <div class="text-3xl md:text-4xl font-bold text-primary">2000+</div>
+                <div class="text-gray-600 text-sm mt-1">器材总数</div>
+              </div>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-1.5">
+              <div class="bg-primary h-1.5 rounded-full" style="width: 85%"></div>
+            </div>
+          </div>
+          
+          <div class="p-6 rounded-2xl bg-gray-50 shadow-elevation-1 hover:shadow-elevation-2 transition-shadow">
+            <div class="flex items-center mb-3">
+              <div class="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary mr-4">
+                <i class="fa fa-th-large text-xl"></i>
+              </div>
+              <div>
+                <div class="text-3xl md:text-4xl font-bold text-secondary">50+</div>
+                <div class="text-gray-600 text-sm mt-1">器材种类</div>
+              </div>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-1.5">
+              <div class="bg-secondary h-1.5 rounded-full" style="width: 65%"></div>
+            </div>
+          </div>
+          
+          <div class="p-6 rounded-2xl bg-gray-50 shadow-elevation-1 hover:shadow-elevation-2 transition-shadow">
+            <div class="flex items-center mb-3">
+              <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center text-accent mr-4">
+                <i class="fa fa-check-circle text-xl"></i>
+              </div>
+              <div>
+                <div class="text-3xl md:text-4xl font-bold text-accent">98%</div>
+                <div class="text-gray-600 text-sm mt-1">完好率</div>
+              </div>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-1.5">
+              <div class="bg-accent h-1.5 rounded-full" style="width: 98%"></div>
+            </div>
+          </div>
+          
+          <div class="p-6 rounded-2xl bg-gray-50 shadow-elevation-1 hover:shadow-elevation-2 transition-shadow">
+            <div class="flex items-center mb-3">
+              <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary mr-4">
+                <i class="fa fa-clock-o text-xl"></i>
+              </div>
+              <div>
+                <div class="text-3xl md:text-4xl font-bold text-primary">5分钟</div>
+                <div class="text-gray-600 text-sm mt-1">平均借阅时间</div>
+              </div>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-1.5">
+              <div class="bg-primary h-1.5 rounded-full" style="width: 45%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 器材列表区域（高级卡片设计） -->
+    <section id="equipment" class="py-18 bg-gray-50">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-14">
+          <span class="inline-block px-4 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium mb-4">
+            器材目录
+          </span>
+          <h2 class="text-[clamp(1.8rem,3vw,2.8rem)] font-bold mb-4">精选体育器材</h2>
+          <p class="text-gray-600 max-w-2xl mx-auto text-lg">我们提供多种类型的体育器材，满足你的各种运动需求，所有器材均经过定期维护保养。</p>
+        </div>
+        
+        <!-- 器材分类筛选 -->
+        <div class="mb-10 overflow-x-auto scrollbar-hide">
+          <div class="flex space-x-3 pb-2 min-w-max">
+            <button class="px-5 py-2.5 bg-primary text-white rounded-full text-sm font-medium shadow-elevation-1">全部器材</button>
+            <button class="px-5 py-2.5 bg-white text-gray-700 rounded-full text-sm font-medium hover:bg-primary/5 hover:text-primary transition-colors shadow-elevation-1">球类</button>
+            <button class="px-5 py-2.5 bg-white text-gray-700 rounded-full text-sm font-medium hover:bg-primary/5 hover:text-primary transition-colors shadow-elevation-1">健身器材</button>
+            <button class="px-5 py-2.5 bg-white text-gray-700 rounded-full text-sm font-medium hover:bg-primary/5 hover:text-primary transition-colors shadow-elevation-1">田径器材</button>
+            <button class="px-5 py-2.5 bg-white text-gray-700 rounded-full text-sm font-medium hover:bg-primary/5 hover:text-primary transition-colors shadow-elevation-1">户外装备</button>
+            <button class="px-5 py-2.5 bg-white text-gray-700 rounded-full text-sm font-medium hover:bg-primary/5 hover:text-primary transition-colors shadow-elevation-1">护具装备</button>
+            <button class="px-5 py-2.5 bg-white text-gray-700 rounded-full text-sm font-medium hover:bg-primary/5 hover:text-primary transition-colors shadow-elevation-1">水上运动</button>
+          </div>
+        </div>
+        
+        <!-- 搜索和排序 -->
+        <div class="flex flex-col sm:flex-row justify-between items-center mb-10 gap-4">
+          <div class="relative w-full sm:w-72">
+            <input type="text" placeholder="搜索器材..." class="w-full pl-10 pr-4 py-2.5 rounded-lg bg-white border border-gray-200 focus:ring-2 focus:ring-accent/30 focus:border-accent outline-none transition-all shadow-elevation-1 placeholder:text-gray-400">
+            <i class="fa fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+          </div>
+          <div class="flex items-center space-x-3">
+            <span class="text-gray-600">排序方式:</span>
+            <select class="border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-accent/30 focus:border-accent outline-none shadow-elevation-1 bg-white">
+              <option>默认排序</option>
+              <option>热门程度</option>
+              <option>库存最多</option>
+              <option>最新上架</option>
+            </select>
+          </div>
+        </div>
+        
+        <!-- 器材网格 -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <!-- 器材卡片 1 -->
+          <div class="bg-white rounded-2xl shadow-elevation-1 overflow-hidden card-hover">
+            <div class="relative">
+              <img src="https://picsum.photos/id/26/400/300" alt="篮球" class="w-full h-52 object-cover">
+              <span class="absolute top-4 left-4 bg-success text-white text-xs font-bold px-2.5 py-1 rounded-full">有库存</span>
+            </div>
+            <div class="p-6">
+              <div class="flex justify-between items-start mb-3">
+                <h3 class="font-bold text-lg">专业篮球</h3>
+                <span class="text-sm bg-primary/10 text-primary px-2.5 py-1 rounded-full">球类</span>
+              </div>
+              <p class="text-gray-600 text-sm mb-5">标准尺寸7号篮球，适合比赛和训练使用</p>
+              <div class="flex justify-between items-center mb-5">
+                <div class="flex items-center text-sm text-gray-500">
+                  <i class="fa fa-clipboard-check mr-1.5"></i>
+                  <span>可借3天</span>
+                </div>
+                <div class="flex items-center text-sm text-gray-500">
+                  <i class="fa fa-boxes mr-1.5"></i>
+                  <span>库存: 24</span>
+                </div>
+              </div>
+              <button class="w-full py-2.5 btn-gradient text-white rounded-lg hover:btn-gradient-hover transition-colors font-medium transform hover:scale-[1.02] active:scale-[0.98]">
+                立即借阅
+              </button>
+            </div>
+          </div>
+          
+          <!-- 器材卡片 2 -->
+          <div class="bg-white rounded-2xl shadow-elevation-1 overflow-hidden card-hover">
+            <div class="relative">
+              <img src="https://picsum.photos/id/116/400/300" alt="跑步机" class="w-full h-52 object-cover">
+              <span class="absolute top-4 left-4 bg-success text-white text-xs font-bold px-2.5 py-1 rounded-full">有库存</span>
+            </div>
+            <div class="p-6">
+              <div class="flex justify-between items-start mb-3">
+                <h3 class="font-bold text-lg">电动跑步机</h3>
+                <span class="text-sm bg-primary/10 text-primary px-2.5 py-1 rounded-full">健身</span>
+              </div>
+              <p class="text-gray-600 text-sm mb-5">多功能电动跑步机，带心率监测</p>
+              <div class="flex justify-between items-center mb-5">
+                <div class="flex items-center text-sm text-gray-500">
+                  <i class="fa fa-clipboard-check mr-1.5"></i>
+                  <span>可借1天</span>
+                </div>
+                <div class="flex items-center text-sm text-gray-500">
+                  <i class="fa fa-boxes mr-1.5"></i>
+                  <span>库存: 8</span>
+                </div>
+              </div>
+              <button class="w-full py-2.5 btn-gradient text-white rounded-lg hover:btn-gradient-hover transition-colors font-medium transform hover:scale-[1.02] active:scale-[0.98]">
+                立即借阅
+              </button>
+            </div>
+          </div>
+          
+          <!-- 器材卡片 3 -->
+          <div class="bg-white rounded-2xl shadow-elevation-1 overflow-hidden card-hover">
+            <div class="relative">
+              <img src="https://picsum.photos/id/1060/400/300" alt="羽毛球拍" class="w-full h-52 object-cover">
+              <span class="absolute top-4 left-4 bg-success text-white text-xs font-bold px-2.5 py-1 rounded-full">有库存</span>
+            </div>
+            <div class="p-6">
+              <div class="flex justify-between items-start mb-3">
+                <h3 class="font-bold text-lg">羽毛球拍套装</h3>
+                <span class="text-sm bg-primary/10 text-primary px-2.5 py-1 rounded-full">球类</span>
+              </div>
+              <p class="text-gray-600 text-sm mb-5">专业级羽毛球拍，含3个羽毛球</p>
+              <div class="flex justify-between items-center mb-5">
+                <div class="flex items-center text-sm text-gray-500">
+                  <i class="fa fa-clipboard-check mr-1.5"></i>
+                  <span>可借7天</span>
+                </div>
+                <div class="flex items-center text-sm text-gray-500">
+                  <i class="fa fa-boxes mr-1.5"></i>
+                  <span>库存: 36</span>
+                </div>
+              </div>
+              <button class="w-full py-2.5 btn-gradient text-white rounded-lg hover:btn-gradient-hover transition-colors font-medium transform hover:scale-[1.02] active:scale-[0.98]">
+                立即借阅
+              </button>
+            </div>
+          </div>
+          
+          <!-- 器材卡片 4 -->
+          <div class="bg-white rounded-2xl shadow-elevation-1 overflow-hidden card-hover">
+            <div class="relative">
+              <img src="https://picsum.photos/id/176/400/300" alt="登山包" class="w-full h-52 object-cover">
+              <span class="absolute top-4 left-4 bg-secondary text-white text-xs font-bold px-2.5 py-1 rounded-full">库存少</span>
+            </div>
+            <div class="p-6">
+              <div class="flex justify-between items-start mb-3">
+                <h3 class="font-bold text-lg">45L登山包</h3>
+                <span class="text-sm bg-primary/10 text-primary px-2.5 py-1 rounded-full">户外</span>
+              </div>
+              <p class="text-gray-600 text-sm mb-5">大容量户外登山包，防水耐磨</p>
+              <div class="flex justify-between items-center mb-5">
+                <div class="flex items-center text-sm text-gray-500">
+                  <i class="fa fa-clipboard-check mr-1.5"></i>
+                  <span>可借14天</span>
+                </div>
+                <div class="flex items-center text-sm text-gray-500">
+                  <i class="fa fa-boxes mr-1.5"></i>
+                  <span>库存: 3</span>
+                </div>
+              </div>
+              <button class="w-full py-2.5 btn-gradient text-white rounded-lg hover:btn-gradient-hover transition-colors font-medium transform hover:scale-[1.02] active:scale-[0.98]">
+                立即借阅
+              </button>
+            </div>
+          </div>
+          
+          <!-- 器材卡片 5 -->
+          <div class="bg-white rounded-2xl shadow-elevation-1 overflow-hidden card-hover">
+            <div class="relative">
+              <img src="https://picsum.photos/id/1059/400/300" alt="足球" class="w-full h-52 object-cover">
+              <span class="absolute top-4 left-4 bg-success text-white text-xs font-bold px-2.5 py-1 rounded-full">有库存</span>
+            </div>
+            <div class="p-6">
+              <div class="flex justify-between items-start mb-3">
+                <h3 class="font-bold text-lg">标准足球</h3>
+                <span class="text-sm bg-primary/10 text-primary px-2.5 py-1 rounded-full">球类</span>
+              </div>
+              <p class="text-gray-600 text-sm mb-5">5号标准足球，适合训练和比赛</p>
+              <div class="flex justify-between items-center mb-5">
+                <div class="flex items-center text-sm text-gray-500">
+                  <i class="fa fa-clipboard-check mr-1.5"></i>
+                  <span>可借3天</span>
+                </div>
+                <div class="flex items-center text-sm text-gray-500">
+                  <i class="fa fa-boxes mr-1.5"></i>
+                  <span>库存: 18</span>
+                </div>
+              </div>
+              <button class="w-full py-2.5 btn-gradient text-white rounded-lg hover:btn-gradient-hover transition-colors font-medium transform hover:scale-[1.02] active:scale-[0.98]">
+                立即借阅
+              </button>
+            </div>
+          </div>
+          
+          <!-- 器材卡片 6 -->
+          <div class="bg-white rounded-2xl shadow-elevation-1 overflow-hidden card-hover">
+            <div class="relative">
+              <img src="https://picsum.photos/id/1063/400/300" alt="瑜伽垫" class="w-full h-52 object-cover">
+              <span class="absolute top-4 left-4 bg-success text-white text-xs font-bold px-2.5 py-1 rounded-full">有库存</span>
+            </div>
+            <div class="p-6">
+              <div class="flex justify-between items-start mb-3">
+                <h3 class="font-bold text-lg">专业瑜伽垫</h3>
+                <span class="text-sm bg-primary/10 text-primary px-2.5 py-1 rounded-full">健身</span>
+              </div>
+              <p class="text-gray-600 text-sm mb-5">防滑环保瑜伽垫，厚度10mm</p>
+              <div class="flex justify-between items-center mb-5">
+                <div class="flex items-center text-sm text-gray-500">
+                  <i class="fa fa-clipboard-check mr-1.5"></i>
+                  <span>可借7天</span>
+                </div>
+                <div class="flex items-center text-sm text-gray-500">
+                  <i class="fa fa-boxes mr-1.5"></i>
+                  <span>库存: 29</span>
+                </div>
+              </div>
+              <button class="w-full py-2.5 btn-gradient text-white rounded-lg hover:btn-gradient-hover transition-colors font-medium transform hover:scale-[1.02] active:scale-[0.98]">
+                立即借阅
+              </button>
+            </div>
+          </div>
+          
+          <!-- 器材卡片 7 -->
+          <div class="bg-white rounded-2xl shadow-elevation-1 overflow-hidden card-hover">
+            <div class="relative">
+              <img src="https://picsum.photos/id/1055/400/300" alt="护膝" class="w-full h-52 object-cover">
+              <span class="absolute top-4 left-4 bg-success text-white text-xs font-bold px-2.5 py-1 rounded-full">有库存</span>
+            </div>
+            <div class="p-6">
+              <div class="flex justify-between items-start mb-3">
+                <h3 class="font-bold text-lg">运动护膝</h3>
+                <span class="text-sm bg-primary/10 text-primary px-2.5 py-1 rounded-full">护具</span>
+              </div>
+              <p class="text-gray-600 text-sm mb-5">专业级运动护膝，提供良好支撑</p>
+              <div class="flex justify-between items-center mb-5">
+                <div class="flex items-center text-sm text-gray-500">
+                  <i class="fa fa-clipboard-check mr-1.5"></i>
+                  <span>可借14天</span>
+                </div>
+                <div class="flex items-center text-sm text-gray-500">
+                  <i class="fa fa-boxes mr-1.5"></i>
+                  <span>库存: 42</span>
+                </div>
+              </div>
+              <button class="w-full py-2.5 btn-gradient text-white rounded-lg hover:btn-gradient-hover transition-colors font-medium transform hover:scale-[1.02] active:scale-[0.98]">
+                立即借阅
+              </button>
+            </div>
+          </div>
+          
+          <!-- 器材卡片 8 -->
+          <div class="bg-white rounded-2xl shadow-elevation-1 overflow-hidden card-hover">
+            <div class="relative">
+              <img src="https://picsum.photos/id/1054/400/300" alt="游泳镜" class="w-full h-52 object-cover">
+              <span class="absolute top-4 left-4 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">无库存</span>
+            </div>
+            <div class="p-6">
+              <div class="flex justify-between items-start mb-3">
+                <h3 class="font-bold text-lg">防雾游泳镜</h3>
+                <span class="text-sm bg-primary/10 text-primary px-2.5 py-1 rounded-full">水上</span>
+              </div>
+              <p class="text-gray-600 text-sm mb-5">高清防雾游泳镜，防水性能好</p>
+              <div class="flex justify-between items-center mb-5">
+                <div class="flex items-center text-sm text-gray-500">
+                  <i class="fa fa-clipboard-check mr-1.5"></i>
+                  <span>可借7天</span>
+                </div>
+                <div class="flex items-center text-sm text-gray-500">
+                  <i class="fa fa-boxes mr-1.5"></i>
+                  <span>库存: 0</span>
+                </div>
+              </div>
+              <button class="w-full py-2.5 bg-gray-200 text-gray-500 rounded-lg cursor-not-allowed font-medium">
+                缺货登记
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 加载更多按钮 -->
+        <div class="mt-12 text-center">
+          <button class="px-8 py-3 border border-primary text-primary font-medium rounded-full hover:bg-primary/5 transition-colors shadow-elevation-1 transform hover:scale-[1.02] active:scale-[0.98]">
+            <i class="fa fa-refresh mr-2"></i>加载更多器材
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 借阅流程（高级步骤设计） -->
+    <section id="process" class="py-18 bg-white relative overflow-hidden">
+      <!-- 装饰背景 -->
+      <div class="absolute top-0 right-0 w-1/3 h-1/3 bg-primary/5 rounded-full -mr-20 -mt-20"></div>
+      <div class="absolute bottom-0 left-0 w-1/4 h-1/4 bg-secondary/5 rounded-full -ml-20 -mb-20"></div>
+      
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="text-center mb-16">
+          <span class="inline-block px-4 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium mb-4">
+            借阅指南
+          </span>
+          <h2 class="text-[clamp(1.8rem,3vw,2.8rem)] font-bold mb-4">简单四步，轻松借阅</h2>
+          <p class="text-gray-600 max-w-2xl mx-auto text-lg">我们简化了借阅流程，只需四个简单步骤，即可完成器材借阅，让你专注于运动本身。</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <!-- 步骤1 -->
+          <div class="text-center relative">
+            <div class="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center text-3xl font-bold mx-auto mb-6 shadow-elevation-1">
+              1
+            </div>
+            <h3 class="text-xl font-bold mb-3">选择器材</h3>
+            <p class="text-gray-600">浏览器材列表，选择你需要的体育器材，查看库存状态。</p>
+            
+            <!-- 连接线 - 仅在中等屏幕以上显示 -->
+            <div class="hidden lg:block absolute top-10 right-0 w-1/2 h-0.5 bg-primary/20"></div>
+          </div>
+          
+          <!-- 步骤2 -->
+          <div class="text-center relative">
+            <div class="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center text-3xl font-bold mx-auto mb-6 shadow-elevation-1">
+              2
+            </div>
+            <h3 class="text-xl font-bold mb-3">确认信息</h3>
+            <p class="text-gray-600">填写借阅信息，选择预计归还时间，确认借阅条款。</p>
+            
+            <!-- 连接线 - 仅在中等屏幕以上显示 -->
+            <div class="hidden lg:block absolute top-10 right-0 w-1/2 h-0.5 bg-primary/20"></div>
+          </div>
+          
+          <!-- 步骤3 -->
+          <div class="text-center relative">
+            <div class="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center text-3xl font-bold mx-auto mb-6 shadow-elevation-1">
+              3
+            </div>
+            <h3 class="text-xl font-bold mb-3">取件确认</h3>
+            <p class="text-gray-600">前往借阅室，出示身份证明，工作人员核对后领取器材。</p>
+            
+            <!-- 连接线 - 仅在中等屏幕以上显示 -->
+            <div class="hidden lg:block absolute top-10 right-0 w-1/2 h-0.5 bg-primary/20"></div>
+          </div>
+          
+          <!-- 步骤4 -->
+          <div class="text-center">
+            <div class="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center text-3xl font-bold mx-auto mb-6 shadow-elevation-1">
+              4
+            </div>
+            <h3 class="text-xl font-bold mb-3">归还器材</h3>
+            <p class="text-gray-600">在规定时间内归还器材，工作人员检查无误后完成归还流程。</p>
+          </div>
+        </div>
+        
+        <!-- 借阅须知（高级卡片） -->
+        <div class="mt-18 bg-gray-50 rounded-2xl p-8 shadow-elevation-1">
+          <h3 class="text-xl font-bold mb-6 flex items-center">
+            <i class="fa fa-info-circle text-primary mr-3 text-xl"></i>借阅须知
+          </h3>
+          <ul class="space-y-4 text-gray-600">
+            <li class="flex items-start">
+              <i class="fa fa-check-circle text-success mt-1 mr-3"></i>
+              <span>借阅人需凭有效身份证件（学生证/教师证）办理借阅手续</span>
+            </li>
+            <li class="flex items-start">
+              <i class="fa fa-check-circle text-success mt-1 mr-3"></i>
+              <span>不同类型器材借阅期限不同，请留意器材详情页说明</span>
+            </li>
+            <li class="flex items-start">
+              <i class="fa fa-check-circle text-success mt-1 mr-3"></i>
+              <span>逾期未归还将按每天1元/件收取滞纳金，最高不超过器材价值</span>
+            </li>
+            <li class="flex items-start">
+              <i class="fa fa-check-circle text-success mt-1 mr-3"></i>
+              <span>如器材损坏或丢失，需按规定赔偿，具体参照《器材赔偿标准》</span>
+            </li>
+            <li class="flex items-start">
+              <i class="fa fa-check-circle text-success mt-1 mr-3"></i>
+              <span>开放时间：周一至周五 8:00-21:00，周末 9:00-18:00</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 使用统计（高级图表设计） -->
+    <section id="stats" class="py-18 bg-gray-50">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-14">
+          <span class="inline-block px-4 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium mb-4">
+            数据统计
+          </span>
+          <h2 class="text-[clamp(1.8rem,3vw,2.8rem)] font-bold mb-4">器材使用统计</h2>
+          <p class="text-gray-600 max-w-2xl mx-auto text-lg">了解热门器材和使用趋势，帮助你更好地规划运动安排。</p>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <!-- 热门器材统计图表 -->
+          <div class="bg-white rounded-2xl shadow-elevation-1 p-6 md:p-8">
+            <h3 class="text-lg font-bold mb-6 flex items-center">
+              <i class="fa fa-fire text-secondary mr-2"></i>热门器材TOP10
+            </h3>
+            <div class="h-80">
+              <canvas id="popularEquipmentChart"></canvas>
+            </div>
+          </div>
+          
+          <!-- 月度使用趋势图表 -->
+          <div class="bg-white rounded-2xl shadow-elevation-1 p-6 md:p-8">
+            <h3 class="text-lg font-bold mb-6 flex items-center">
+              <i class="fa fa-line-chart text-accent mr-2"></i>月度使用趋势
+            </h3>
+            <div class="h-80">
+              <canvas id="monthlyTrendChart"></canvas>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 分类统计卡片 -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+          <div class="bg-white rounded-2xl shadow-elevation-1 p-6 hover:shadow-elevation-2 transition-shadow">
+            <div class="flex justify-between items-start mb-5">
+              <div>
+                <h4 class="text-gray-500 text-sm">球类器材</h4>
+                <p class="text-3xl font-bold mt-1">42%</p>
+              </div>
+              <div class="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center">
+                <i class="fa fa-futbol-o text-primary text-2xl"></i>
+              </div>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div class="bg-primary h-2 rounded-full" style="width: 42%"></div>
+            </div>
+            <p class="text-xs text-gray-500 mt-3">占总借阅量的42%，较上月增长5%</p>
+          </div>
+          
+          <div class="bg-white rounded-2xl shadow-elevation-1 p-6 hover:shadow-elevation-2 transition-shadow">
+            <div class="flex justify-between items-start mb-5">
+              <div>
+                <h4 class="text-gray-500 text-sm">健身器材</h4>
+                <p class="text-3xl font-bold mt-1">28%</p>
+              </div>
+              <div class="w-14 h-14 bg-orange-100 rounded-xl flex items-center justify-center">
+                <i class="fa fa-dumbbell text-secondary text-2xl"></i>
+              </div>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div class="bg-secondary h-2 rounded-full" style="width: 28%"></div>
+            </div>
+            <p class="text-xs text-gray-500 mt-3">占总借阅量的28%，较上月增长3%</p>
+          </div>
+          
+          <div class="bg-white rounded-2xl shadow-elevation-1 p-6 hover:shadow-elevation-2 transition-shadow">
+            <div class="flex justify-between items-start mb-5">
+              <div>
+                <h4 class="text-gray-500 text-sm">其他器材</h4>
+                <p class="text-3xl font-bold mt-1">30%</p>
+              </div>
+              <div class="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center">
+                <i class="fa fa-boxes text-accent text-2xl"></i>
+              </div>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div class="bg-accent h-2 rounded-full" style="width: 30%"></div>
+            </div>
+            <p class="text-xs text-gray-500 mt-3">占总借阅量的30%，较上月下降2%</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 通知公告（高级卡片） -->
+    <section class="py-18 bg-white">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-12">
+          <div>
+            <span class="inline-block px-4 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium mb-4">
+              最新动态
+            </span>
+            <h2 class="text-2xl font-bold">通知公告</h2>
+            <p class="text-gray-600 mt-2">了解最新的借阅室动态和活动信息</p>
+          </div>
+          <a href="#" class="text-primary hover:text-primary/80 font-medium mt-4 md:mt-0 flex items-center group">
+            查看全部 <i class="fa fa-long-arrow-right ml-2 transition-transform group-hover:translate-x-1"></i>
+          </a>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <!-- 公告1 -->
+          <div class="border border-gray-100 rounded-2xl p-6 hover:shadow-elevation-2 transition-all duration-300 bg-white group">
+            <div class="flex justify-between items-start mb-5">
+              <span class="bg-primary/10 text-primary text-xs font-medium px-2.5 py-1 rounded-full">重要通知</span>
+              <span class="text-gray-500 text-sm">2023-06-15</span>
+            </div>
+            <h3 class="font-bold text-lg mb-3 group-hover:text-primary transition-colors">暑期借阅时间调整通知</h3>
+            <p class="text-gray-600 text-sm mb-5">暑期期间（7月1日-8月31日），借阅室开放时间调整为9:00-17:00，周末正常开放。</p>
+            <a href="#" class="text-primary text-sm font-medium hover:underline inline-flex items-center">
+              阅读全文 <i class="fa fa-angle-right ml-1"></i>
+            </a>
+          </div>
+          
+          <!-- 公告2 -->
+          <div class="border border-gray-100 rounded-2xl p-6 hover:shadow-elevation-2 transition-all duration-300 bg-white group">
+            <div class="flex justify-between items-start mb-5">
+              <span class="bg-secondary/10 text-secondary text-xs font-medium px-2.5 py-1 rounded-full">器材更新</span>
+              <span class="text-gray-500 text-sm">2023-06-10</span>
+            </div>
+            <h3 class="font-bold text-lg mb-3 group-hover:text-primary transition-colors">新增一批专业羽毛球拍</h3>
+            <p class="text-gray-600 text-sm mb-5">新采购的20副专业级羽毛球拍已上架，包括尤尼克斯、胜利等品牌，欢迎前来借阅。</p>
+            <a href="#" class="text-primary text-sm font-medium hover:underline inline-flex items-center">
+              阅读全文 <i class="fa fa-angle-right ml-1"></i>
+            </a>
+          </div>
+          
+          <!-- 公告3 -->
+          <div class="border border-gray-100 rounded-2xl p-6 hover:shadow-elevation-2 transition-all duration-300 bg-white group">
+            <div class="flex justify-between items-start mb-5">
+              <span class="bg-accent/10 text-accent text-xs font-medium px-2.5 py-1 rounded-full">活动通知</span>
+              <span class="text-gray-500 text-sm">2023-06-05</span>
+            </div>
+            <h3 class="font-bold text-lg mb-3 group-hover:text-primary transition-colors">"运动达人"借阅积分活动</h3>
+            <p class="text-gray-600 text-sm mb-5">6月15日-7月15日期间，累计借阅器材满5次可获得精美运动礼品一份，多借多送。</p>
+            <a href="#" class="text-primary text-sm font-medium hover:underline inline-flex items-center">
+              阅读全文 <i class="fa fa-angle-right ml-1"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 订阅通知（高级表单） -->
+    <section class="py-18 bg-primary/5 relative overflow-hidden">
+      <!-- 装饰元素 -->
+      <div class="absolute top-0 left-0 w-64 h-64 bg-primary/5 rounded-full -ml-32 -mt-32"></div>
+      <div class="absolute bottom-0 right-0 w-80 h-80 bg-secondary/5 rounded-full -mr-40 -mb-40"></div>
+      
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="max-w-3xl mx-auto text-center">
+          <span class="inline-block px-4 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium mb-4">
+            订阅更新
+          </span>
+          <h2 class="text-2xl md:text-3xl font-bold mb-4">订阅器材更新通知</h2>
+          <p class="text-gray-600 mb-8">第一时间获取新器材上架、活动通知等信息，不错过任何运动机会</p>
+          
+          <form class="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
+            <input type="email" placeholder="请输入你的邮箱地址" class="flex-1 px-5 py-3.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-accent/30 focus:border-accent outline-none shadow-elevation-1">
+            <button type="submit" class="px-7 py-3.5 btn-gradient text-white font-medium rounded-lg hover:btn-gradient-hover transition-colors whitespace-nowrap shadow-elevation-1 transform hover:scale-[1.02] active:scale-[0.98]">
+              立即订阅
+            </button>
+          </form>
+          <p class="text-gray-500 text-sm mt-4">我们尊重你的隐私，不会向第三方泄露你的信息</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 页脚（高级设计） -->
+  <footer class="bg-dark text-white pt-18 pb-10">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-16">
+        <div>
+          <div class="flex items-center mb-6">
+            <i class="fa fa-futbol-o text-primary text-2xl mr-2"></i>
+            <span class="text-xl font-bold">体育器材借阅室</span>
+          </div>
+          <p class="text-gray-400 mb-6 leading-relaxed">提供专业、便捷的体育器材借阅服务，助力校园体育文化发展。</p>
+          <div class="flex space-x-4">
+            <a href="#" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-primary transition-colors">
+              <i class="fa fa-weixin"></i>
+            </a>
+            <a href="#" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-primary transition-colors">
+              <i class="fa fa-weibo"></i>
+            </a>
+            <a href="#" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-primary transition-colors">
+              <i class="fa fa-qq"></i>
+            </a>
+          </div>
+        </div>
+        
+        <div>
+          <h3 class="text-lg font-bold mb-6">快速链接</h3>
+          <ul class="space-y-3">
+            <li><a href="#home" class="text-gray-400 hover:text-white transition-colors">首页</a></li>
+            <li><a href="#equipment" class="text-gray-400 hover:text-white transition-colors">器材列表</a></li>
+            <li><a href="#process" class="text-gray-400 hover:text-white transition-colors">借阅流程</a></li>
+            <li><a href="#stats" class="text-gray-400 hover:text-white transition-colors">使用统计</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">常见问题</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h3 class="text-lg font-bold mb-6">联系我们</h3>
+          <ul class="space-y-4">
+            <li class="flex items-start">
+              <i class="fa fa-map-marker text-primary mt-1 mr-3"></i>
+              <span class="text-gray-400">校园体育馆B1层器材借阅室</span>
+            </li>
+            <li class="flex items-center">
+              <i class="fa fa-phone text-primary mr-3"></i>
+              <span class="text-gray-400">010-12345678</span>
+            </li>
+            <li class="flex items-center">
+              <i class="fa fa-envelope text-primary mr-3"></i>
+              <span class="text-gray-400">equipment@school.edu</span>
+            </li>
+            <li class="flex items-center">
+              <i class="fa fa-clock-o text-primary mr-3"></i>
+              <span class="text-gray-400">周一至周五 8:00-21:00</span>
+            </li>
+          </ul>
+        </div>
+        
+        <div>
+          <h3 class="text-lg font-bold mb-6">服务时间</h3>
+          <ul class="space-y-3">
+            <li class="flex justify-between">
+              <span class="text-gray-400">周一至周五</span>
+              <span class="text-gray-400">8:00 - 21:00</span>
+            </li>
+            <li class="flex justify-between">
+              <span class="text-gray-400">周六</span>
+              <span class="text-gray-400">9:00 - 18:00</span>
+            </li>
+            <li class="flex justify-between">
+              <span class="text-gray-400">周日</span>
+              <span class="text-gray-400">9:00 - 18:00</span>
+            </li>
+            <li class="flex justify-between">
+              <span class="text-gray-400">法定节假日</span>
+              <span class="text-gray-400">10:00 - 16:00</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="border-t border-white/10 pt-8 text-center text-gray-500 text-sm">
+        <p>© 2023 校园体育器材借阅室 版权所有 | 校园服务中心管理</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- 回到顶部按钮（高级设计） -->
+  <button id="backToTop" class="fixed bottom-8 right-8 w-12 h-12 bg-primary text-white rounded-full shadow-elevation-2 flex items-center justify-center opacity-0 invisible transition-all duration-300 hover:bg-primary/90 transform hover:scale-110 active:scale-90 z-50">
+    <i class="fa fa-angle-up text-xl"></i>
+  </button>
+
+  <!-- JavaScript -->
+  <script>
+    // 导航栏滚动效果
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 50) {
+        navbar.classList.add('shadow-elevation-2');
+        navbar.classList.remove('bg-glass');
+        navbar.classList.add('bg-white');
+      } else {
+        navbar.classList.remove('shadow-elevation-2');
+        navbar.classList.add('bg-glass');
+        navbar.classList.remove('bg-white');
+      }
+    });
+    
+    // 移动端菜单切换
+    const mobileMenuButton = document.getElementById('mobileMenuButton');
+    const mobileMenu = document.getElementById('mobileMenu');
+    
+    mobileMenuButton.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+    
+    // 用户下拉菜单
+    const userButton = document.getElementById('userButton');
+    const userDropdown = document.getElementById('userDropdown');
+    const dropdownIcon = document.getElementById('dropdownIcon');
+    
+    userButton.addEventListener('click', () => {
+      userDropdown.classList.toggle('hidden');
+      dropdownIcon.classList.toggle('rotate-180');
+    });
+    
+    // 点击其他区域关闭下拉菜单
+    document.addEventListener('click', (e) => {
+      if (!userButton.contains(e.target) && !userDropdown.contains(e.target)) {
+        userDropdown.classList.add('hidden');
+        dropdownIcon.classList.remove('rotate-180');
+      }
+    });
+    
+    // 平滑滚动
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        
+        const targetId = this.getAttribute('href');
+        if (targetId === '#') return;
+        
+        const targetElement = document.querySelector(targetId);
+        if (targetElement) {
+          window.scrollTo({
+            top: targetElement.offsetTop - 80,
+            behavior: 'smooth'
+          });
+          
+          // 关闭移动端菜单和下拉菜单
+          mobileMenu.classList.add('hidden');
+          userDropdown.classList.add('hidden');
+          dropdownIcon.classList.remove('rotate-180');
+        }
+      });
+    });
+    
+    // 回到顶部按钮
+    const backToTopButton = document.getElementById('backToTop');
+    
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 500) {
+        backToTopButton.classList.remove('opacity-0', 'invisible');
+        backToTopButton.classList.add('opacity-100', 'visible');
+      } else {
+        backToTopButton.classList.add('opacity-0', 'invisible');
+        backToTopButton.classList.remove('opacity-100', 'visible');
+      }
+    });
+    
+    backToTopButton.addEventListener('click', () => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
+    
+    // 热门器材图表
+    const popularEquipmentCtx = document.getElementById('popularEquipmentChart').getContext('2d');
+    const popularEquipmentChart = new Chart(popularEquipmentCtx, {
+      type: 'bar',
+      data: {
+        labels: ['篮球', '羽毛球拍', '足球', '瑜伽垫', '跑步机', '乒乓球拍', '排球', '健身球', '跳绳', '护膝'],
+        datasets: [{
+          label: '月借阅次数',
+          data: [320, 280, 210, 180, 150, 140, 120, 100, 90, 80],
+          backgroundColor: '#0F4C81',
+          borderRadius: 8,
+          barThickness: 28,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            backgroundColor: 'rgba(15, 76, 129, 0.9)',
+            padding: 12,
+            cornerRadius: 8,
+            titleFont: {
+              size: 14,
+              weight: 'bold'
+            },
+            bodyFont: {
+              size: 13
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(0, 0, 0, 0.05)'
+            }
+          },
+          x: {
+            grid: {
+              display: false
+            }
+          }
+        },
+        animation: {
+          duration: 2000,
+          easing: 'easeOutQuart'
+        }
+      }
+    });
+    
+    // 月度趋势图表
+    const monthlyTrendCtx = document.getElementById('monthlyTrendChart').getContext('2d');
+    const monthlyTrendChart = new Chart(monthlyTrendCtx, {
+      type: 'line',
+      data: {
+        labels: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+        datasets: [{
+          label: '借阅总量',
+          data: [1200, 1100, 1500, 1800, 2200, 2500, 3000, 2800, 2400, 2100, 1800, 1600],
+          borderColor: '#FF6B35',
+          backgroundColor: 'rgba(255, 107, 53, 0.1)',
+          tension: 0.4,
+          fill: true,
+          pointBackgroundColor: '#fff',
+          pointBorderColor: '#FF6B35',
+          pointBorderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            backgroundColor: 'rgba(255, 107, 53, 0.9)',
+            padding: 12,
+            cornerRadius: 8,
+            titleFont: {
+              size: 14,
+              weight: 'bold'
+            },
+            bodyFont: {
+              size: 13
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(0, 0, 0, 0.05)'
+            }
+          },
+          x: {
+            grid: {
+              display: false
+            }
+          }
+        },
+        animation: {
+          duration: 2000,
+          easing: 'easeOutQuart'
+        }
+      }
+    });
+    
+    // 页面加载动画
+    document.addEventListener('DOMContentLoaded', () => {
+      // 为卡片添加渐入动画
+      const cards = document.querySelectorAll('.card-hover');
+      cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+        
+        setTimeout(() => {
+          card.style.opacity = '1';
+          card.style.transform = 'translateY(0)';
+        }, 100 + index * 100);
+      });
+    });
+  </script>
+</body>
+</html>
