@@ -1,0 +1,59 @@
+{% extends 'layout.html' %}
+
+{% block page_header %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow">资讯中心</p>
+    <h1>{{ category_label }}</h1>
+    <p>了解器材室调配、国家体育政策与赛事动态，管理员后台即时发布。</p>
+  </div>
+  <form class="news-filter" method="get" action="{{ url_for('news_list') }}">
+    <div class="d-flex flex-wrap gap-2">
+      <div class="flex-grow-1">
+        <input class="form-control" type="search" name="q" placeholder="搜索标题 / 摘要 / 内容" value="{{ q }}">
+      </div>
+      <div>
+        <select class="form-select" name="category" onchange="this.form.submit()">
+          <option value="" {% if not active_category %}selected{% endif %}>全部分类</option>
+          {% for key, label in news_categories.items() %}
+          <option value="{{ key }}" {% if active_category == key %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button class="btn btn-primary" type="submit">搜索</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="news-list-grid">
+  {% if posts %}
+    {% for news in posts %}
+    <article class="news-card large">
+      <div class="news-meta">
+        <span>{{ news.published_at.strftime('%Y-%m-%d') if news.published_at else '' }}</span>
+        <span class="badge bg-dark">{{ news_categories.get(news.category, '资讯') }}</span>
+        {% if news.is_pinned %}<span class="badge bg-info">置顶</span>{% endif %}
+      </div>
+      <h3><a href="{{ url_for('news_detail', news_id=news.id) }}">{{ news.title }}</a></h3>
+      <p>{{ news.summary or news.content }}</p>
+      <div class="news-footer">
+        <span><i class="bi bi-chat-dots"></i> {{ news.comments.count() }} 条评论</span>
+        <div class="news-actions">
+          {% if news.source %}<a class="link-arrow" href="{{ news.source }}" target="_blank" rel="noreferrer noopener">来源</a>{% endif %}
+          <a class="link-arrow" href="{{ url_for('news_detail', news_id=news.id) }}">详情</a>
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+  {% else %}
+    <div class="empty-state">
+      <p>暂无资讯，等待管理员发布。</p>
+      {% if current_user and current_user.is_admin %}
+      <a class="btn btn-primary" href="{{ url_for('admin') }}">前往后台发布</a>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

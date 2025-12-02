@@ -1,0 +1,58 @@
+{% extends 'layout.html' %}
+
+{% block page_header %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow">{{ news_categories.get(news.category, '资讯动态') }}</p>
+    <h1>{{ news.title }}</h1>
+    <p>{{ news.published_at.strftime('%Y年%m月%d日') if news.published_at else '' }} · {{ comments|length }} 条评论{% if news.source %} · 来源：{{ news.source }}{% endif %}</p>
+  </div>
+  {% if current_user and current_user.is_admin %}
+  <a class="btn btn-outline-light" href="{{ url_for('admin') }}#news{{ news.id }}">后台编辑</a>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block content %}
+<article class="news-detail article-card">
+  <div class="article-body">
+    {{ news.content | e | replace('\n', '<br>') | safe }}
+  </div>
+</article>
+
+<section class="section-card comment-section">
+  <div class="section-header mb-3">
+    <div>
+      <p class="eyebrow">留言互动</p>
+      <h2>{{ comments|length }} 条评论</h2>
+    </div>
+  </div>
+  {% if current_user %}
+  <form class="comment-form" method="post" action="{{ url_for('add_news_comment', news_id=news.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <textarea class="form-control" name="content" rows="3" placeholder="分享你的建议或想法…" required></textarea>
+    <div class="text-end mt-2">
+      <button class="btn btn-primary" type="submit">发布评论</button>
+    </div>
+  </form>
+  {% else %}
+  <p class="text-muted">登录后即可参与讨论。</p>
+  {% endif %}
+
+  <div class="comment-list">
+    {% if comments %}
+      {% for c in comments %}
+      <div class="comment-card">
+        <div class="comment-meta">
+          <strong>{{ c.user.full_name or c.user.username }}</strong>
+          <span class="comment-time">{{ c.created_at.strftime('%Y-%m-%d %H:%M') if c.created_at else '' }}</span>
+        </div>
+        <p>{{ c.content }}</p>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p class="text-muted">暂无评论，抢先发表第一条吧。</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

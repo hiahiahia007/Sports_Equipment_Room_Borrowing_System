@@ -1,0 +1,45 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6 col-lg-4">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">注册</h5>
+        <form method="post" action="{{ url_for('register') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-3">
+            <label class="form-label">用户名</label>
+            <input class="form-control" type="text" name="username" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">姓名</label>
+            <input class="form-control" type="text" name="full_name">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">班级</label>
+            <input class="form-control" type="text" name="class_name">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">性别</label>
+            <select class="form-select" name="gender">
+              <option value="">请选择</option>
+              <option value="male">男</option>
+              <option value="female">女</option>
+              <option value="other">其他</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">联系电话</label>
+          <input class="form-control" type="tel" name="phone" pattern="^\+?[0-9\- ]{6,20}$" title="请输入正确的联系电话（允许数字、空格、横杠，可选前缀+）">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">密码</label>
+            <input class="form-control" type="password" name="password" required>
+          </div>
+          <button class="btn btn-success">注册并登录</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="card">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-start">
+      <div>
+        <h4>用户详情 — {{ user.username }}</h4>
+        <div class="small text-muted">ID: {{ user.id }}</div>
+      </div>
+      <div class="text-end">
+        <a class="btn btn-sm btn-outline-secondary" href="/export_my_records?user_id={{ user.id }}">导出该用户记录</a>
+        <a class="btn btn-sm btn-secondary" href="/admin">返回管理</a>
+      </div>
+    </div>
+
+    <form method="post" action="{{ url_for('edit_user', user_id=user.id) }}" class="row g-3 my-3">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="col-md-4">
+        <label class="form-label">姓名</label>
+        <input class="form-control" name="full_name" value="{{ user.full_name or '' }}">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">班级</label>
+        <input class="form-control" name="class_name" value="{{ user.class_name or '' }}">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">性别</label>
+        <select class="form-select" name="gender">
+          <option value="">请选择</option>
+          <option value="male" {% if user.gender=='male' %}selected{% endif %}>男</option>
+          <option value="female" {% if user.gender=='female' %}selected{% endif %}>女</option>
+          <option value="other" {% if user.gender=='other' %}selected{% endif %}>其他</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">电话</label>
+        <input class="form-control" name="phone" value="{{ user.phone or '' }}">
+      </div>
+      <div class="col-12 text-end">
+        <button class="btn btn-primary btn-sm">保存修改</button>
+      </div>
+    </form>
+
+    <h5 class="mt-4">借阅记录</h5>
+    <div class="table-responsive">
+      <table class="table table-sm align-middle">
+        <thead class="table-light"><tr><th>时间</th><th>设备</th><th>数量</th><th>状态</th></tr></thead>
+        <tbody>
+          {% for r in records %}
+          <tr>
+            <td class="small text-muted">{{ r.borrow_date }}</td>
+            <td>{{ r.equipment.name if r.equipment else '已删除' }}</td>
+            <td>{{ r.quantity }}</td>
+            <td>{% if r.return_date %}<span class="badge bg-success">已归还</span>{% else %}<span class="badge bg-warning text-dark">未归还</span>{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

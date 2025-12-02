@@ -1,0 +1,88 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="row">
+  <div class="col-md-8">
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col-sm-4">
+            <div class="ratio ratio-4x3 rounded overflow-hidden shadow-sm">
+              <svg class="w-100 h-100" viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
+                <rect width="100%" height="100%" fill="transparent" />
+              </svg>
+            </div>
+          </div>
+          <div class="col-sm-8">
+            <h4 class="card-title mb-1">{{ equipment.name }}</h4>
+            <div class="d-flex gap-3 align-items-center mb-2">
+              <div class="glass small muted">ID: <span class="fw-bold ms-1">{{ equipment.id }}</span></div>
+              <div class="glass small muted">总量: <span class="fw-bold ms-1">{{ equipment.total_quantity }}</span></div>
+              <div class="glass small muted">可借: <span class="fw-bold ms-1">{{ equipment.available_quantity }}</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-subtitle mb-2">最近借出记录</h5>
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead class="table-light"><tr><th>时间</th><th>借用人</th><th>数量</th><th>归还</th></tr></thead>
+            <tbody>
+              {% for r in records %}
+              <tr>
+                <td class="small muted">{{ r.borrow_date }}</td>
+                <td class="fw-semibold">{{ r.user_name }}</td>
+                <td>{{ r.quantity }}</td>
+                <td>
+                  {% if r.return_date %}
+                    <span class="badge badge-success">已归还</span>
+                    <div class="small muted mt-1">{{ r.return_date }}</div>
+                  {% else %}
+                    <span class="badge badge-warning">未归还</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-subtitle">快速操作</h5>
+            {% if equipment.available_quantity > 0 %}
+          {% if current_user %}
+            <form method="post" action="/borrow">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="equipment_id" value="{{ equipment.id }}">
+              <input type="hidden" name="user_name" value="{{ current_user.username }}">
+              <div class="mb-2">
+                <input type="number" name="quantity" value="1" min="1" max="{{ equipment.available_quantity }}" class="form-control">
+              </div>
+              <button class="btn btn-primary">借出</button>
+            </form>
+          {% else %}
+            <div class="alert alert-info mb-0">请先 <a href="{{ url_for('login', next=request.path) }}">登录</a> 后借用本器材。</div>
+          {% endif %}
+        {% else %}
+        <div class="alert alert-secondary">当前无库存</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <h6 class="card-subtitle">导出</h6>
+        <a class="btn btn-outline-secondary btn-sm" href="/export_records">导出所有借阅记录 CSV</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

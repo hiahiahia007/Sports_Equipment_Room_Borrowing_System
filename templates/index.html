@@ -1,0 +1,158 @@
+{% extends 'layout.html' %}
+
+{% block hero %}
+<section class="home-hero container">
+  <div class="hero-copy">
+    <p class="eyebrow">电子科技大学中山学院 · 体育部</p>
+    <h1>体育器材借阅平台</h1>
+    <p class="lead">在线预约、智能提醒、实时库存，一站式掌握校内体育器材室的全部动态，让训练与教学更高效。</p>
+    <div class="hero-actions">
+      {% if current_user %}
+        <a class="btn btn-primary" href="{{ url_for('catalog') }}">进入借阅</a>
+        <a class="btn btn-outline-light" href="{{ url_for('records') }}">查看记录</a>
+      {% else %}
+        <a class="btn btn-primary" href="{{ url_for('login') }}">立即登录</a>
+        <a class="btn btn-outline-light" href="{{ url_for('register') }}">注册学生账号</a>
+      {% endif %}
+    </div>
+  </div>
+  <div class="hero-panel">
+    <div class="panel-title">校园运营快照</div>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="label">可借设备</div>
+        <div class="value">{{ stats.equipment_total }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">正在借用</div>
+        <div class="value">{{ stats.outstanding }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">注册学生</div>
+        <div class="value">{{ stats.user_total }}</div>
+      </div>
+    </div>
+    <p class="panel-note">管理员可实时更新库存及资讯；学生端随时查看并评论。</p>
+  </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<section class="section-card">
+  <div class="section-header">
+    <div>
+      <p class="eyebrow">器材室公告</p>
+      <h2>体育器材室最新资讯</h2>
+    </div>
+    <a class="link-arrow" href="{{ url_for('news_list', category='campus') }}">全部资讯<i class="bi bi-arrow-up-right"></i></a>
+  </div>
+  <div class="news-grid">
+    {% if campus_news %}
+      {% for news in campus_news %}
+      <article class="news-card" id="news{{ news.id }}">
+        <div class="news-meta">
+          <span>{{ news.published_at.strftime('%Y-%m-%d') if news.published_at else '' }}</span>
+          {% if news.is_pinned %}<span class="badge bg-info">置顶</span>{% endif %}
+        </div>
+        <h3><a href="{{ url_for('news_detail', news_id=news.id) }}">{{ news.title }}</a></h3>
+        <p>{{ news.summary or news.content[:140] }}{% if (news.summary or news.content)|length > 140 %}…{% endif %}</p>
+        <div class="news-footer">
+          <span><i class="bi bi-chat-dots"></i> {{ news.comments.count() }} 条评论</span>
+          <a class="link-arrow" href="{{ url_for('news_detail', news_id=news.id) }}">阅读详情</a>
+        </div>
+      </article>
+      {% endfor %}
+    {% else %}
+      <p class="text-muted mb-0">还没有资讯，管理员可在后台发布。</p>
+    {% endif %}
+  </div>
+</section>
+
+<section class="section-card">
+  <div class="section-header">
+    <div>
+      <p class="eyebrow">国家体育资讯</p>
+      <h2>部委与国家赛事速递</h2>
+    </div>
+    <a class="link-arrow" href="{{ url_for('news_list', category='national') }}">更多动态<i class="bi bi-arrow-up-right"></i></a>
+  </div>
+  <div class="news-grid">
+    {% if national_news %}
+      {% for news in national_news %}
+      <article class="news-card">
+        <div class="news-meta">
+          <span>{{ news.published_at.strftime('%Y-%m-%d') if news.published_at else '' }}</span>
+          <span class="badge bg-secondary">国家资讯</span>
+        </div>
+        <h3><a href="{{ url_for('news_detail', news_id=news.id) }}">{{ news.title }}</a></h3>
+        <p>{{ news.summary or news.content[:140] }}{% if (news.summary or news.content)|length > 140 %}…{% endif %}</p>
+        <div class="news-footer">
+          {% if news.source %}<span><i class="bi bi-link-45deg"></i> {{ news.source }}</span>{% endif %}
+          <a class="link-arrow" href="{{ url_for('news_detail', news_id=news.id) }}">查看</a>
+        </div>
+      </article>
+      {% endfor %}
+    {% else %}
+      <p class="text-muted mb-0">等待管理员同步国家体育资讯。</p>
+    {% endif %}
+  </div>
+</section>
+
+<section class="section-card event-timeline">
+  <div class="section-header">
+    <div>
+      <p class="eyebrow">赛事与活动</p>
+      <h2>校园 & 全国赛事安排</h2>
+    </div>
+    <a class="link-arrow" href="{{ url_for('news_list', category='event') }}">赛事专栏<i class="bi bi-arrow-up-right"></i></a>
+  </div>
+  <div class="event-list">
+    {% if event_news %}
+      {% for news in event_news %}
+      <article class="event-item">
+        <div class="event-marker"></div>
+        <div>
+          <div class="event-meta">
+            <span>{{ news.published_at.strftime('%m月%d日') if news.published_at else '' }}</span>
+            {% if news.source %}<span class="badge bg-dark">{{ news.source }}</span>{% endif %}
+          </div>
+          <h3><a href="{{ url_for('news_detail', news_id=news.id) }}">{{ news.title }}</a></h3>
+          <p>{{ news.summary or news.content[:160] }}{% if (news.summary or news.content)|length > 160 %}…{% endif %}</p>
+          <div class="event-footer">
+            <span><i class="bi bi-stopwatch"></i> {{ news_categories.get(news.category, '赛事') }}</span>
+            <a class="link-arrow" href="{{ url_for('news_detail', news_id=news.id) }}">了解更多</a>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    {% else %}
+      <p class="text-muted mb-0">暂无赛事资讯，管理员可在后台标记“赛事速递”分类。</p>
+    {% endif %}
+  </div>
+</section>
+
+<section class="section-card comment-stream">
+  <div class="section-header">
+    <div>
+      <p class="eyebrow">互动留言</p>
+      <h2>学生评论墙</h2>
+    </div>
+  </div>
+  <div class="comment-grid">
+    {% if latest_comments %}
+      {% for c in latest_comments %}
+      <div class="comment-card">
+        <div class="comment-meta">
+          <span class="comment-user">{{ c.user.full_name or c.user.username }}</span>
+          <span class="comment-time">{{ c.created_at.strftime('%Y-%m-%d %H:%M') if c.created_at else '' }}</span>
+        </div>
+        <p>{{ c.content }}</p>
+        <a class="comment-link" href="{{ url_for('news_detail', news_id=c.news_id) }}">查看原文</a>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p class="text-muted mb-0">欢迎登录后在资讯详情页留言。</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
