@@ -185,6 +185,14 @@ body.nav-open .mobile-nav-overlay{display:block}
 .mobile-nav{position:fixed;right:0;top:0;height:100%;width:310px;max-width:86%;background:var(--surface);z-index:95;padding:18px;border-left:1px solid var(--border);transform:translateX(110%);transition:transform .28s ease}
 body.nav-open .mobile-nav{transform:translateX(0)}
 
+.btn-close{background:none!important;opacity:0.7;line-height:1;color:var(--text);text-shadow:none}
+.btn-close::before{content:'\00d7';font-size:1.4rem;font-weight:600;display:inline-block}
+.btn-close:hover{opacity:1}
+.btn-close:focus{outline:2px solid var(--primary);outline-offset:2px}
+
+/* override bootstrap backdrop sizing to avoid covering entire viewport */
+.modal-backdrop{width:auto;height:auto;pointer-events:none;opacity:0!important}
+
 .chart-card{padding:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);border-radius:12px;border:1px solid var(--border)}
 
 /* Glass nav + structural layout */

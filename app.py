@@ -126,7 +126,7 @@ def create_app(config_name: str | None = None, test_config: dict | None = None):
         response.headers.setdefault('Referrer-Policy', 'no-referrer-when-downgrade')
         response.headers.setdefault(
             'Content-Security-Policy',
-            "default-src 'self' https:; script-src 'self' https: 'unsafe-inline'; style-src 'self' https: 'unsafe-inline'; font-src 'self' https: data:;",
+            "default-src 'self' https:; script-src 'self' https: 'unsafe-inline'; style-src 'self' https: 'unsafe-inline'; font-src 'self' https: data:; img-src 'self' https: data:;",
         )
         return response
 

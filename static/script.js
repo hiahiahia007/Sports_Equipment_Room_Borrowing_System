@@ -12,6 +12,27 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     }, 4500);
   });
+
+  // clean up any stale Bootstrap modal state
+  document.body.classList.remove('modal-open');
+  document.body.style.removeProperty('paddingRight');
+  document.querySelectorAll('.modal-backdrop').forEach((backdrop) => backdrop.remove());
+
+  // ensure modals release backdrop on submit actions that trigger reload
+  document.querySelectorAll('.modal form').forEach((form)=>{
+    form.addEventListener('submit', ()=>{
+      const modalEl = form.closest('.modal');
+      if(modalEl && window.bootstrap){
+        const modalInstance = bootstrap.Modal.getInstance(modalEl) || bootstrap.Modal.getOrCreateInstance(modalEl);
+        modalInstance.hide();
+      }
+      setTimeout(()=>{
+        document.body.classList.remove('modal-open');
+        document.body.style.removeProperty('paddingRight');
+        document.querySelectorAll('.modal-backdrop').forEach((backdrop) => backdrop.remove());
+      }, 150);
+    })
+  });
   
   // initialize bootstrap tooltips
   try{
