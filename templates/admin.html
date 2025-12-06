@@ -43,6 +43,10 @@
                     <label class="form-label small">数量</label>
                     <input type="number" name="total" class="form-control" value="1" min="1">
                   </div>
+                  <div class="mb-2">
+                    <label class="form-label small">价格 (元)</label>
+                    <input type="number" name="price" class="form-control" value="0" min="0" step="0.01">
+                  </div>
                 </div>
                 <div class="modal-footer">
                   <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
@@ -55,28 +59,146 @@
       </div>
     </div>
 
+    <h5 class="mt-4">待审核申请</h5>
+    <div class="table-responsive mb-4">
+      <table class="table table-sm align-middle">
+        <thead class="table-light"><tr><th>申请人</th><th>设备</th><th>数量</th><th>申请时间</th><th>操作</th></tr></thead>
+        <tbody>
+          {% for r in pending_records %}
+          <tr>
+            <td>{{ r.user_name }}</td>
+            <td>{{ r.equipment.name }}</td>
+            <td>{{ r.quantity }}</td>
+            <td>{{ r.borrow_date.strftime('%Y-%m-%d %H:%M') if r.borrow_date else 'Pending' }}</td>
+            <td>
+              <form method="post" action="/admin/approve_borrow/{{ r.id }}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-success">通过</button>
+              </form>
+              <form method="post" action="/admin/reject_borrow/{{ r.id }}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-danger">拒绝</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5" class="text-muted text-center">无待审核申请</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <h5 class="mt-4">待领取 (已审核)</h5>
+    <div class="table-responsive mb-4">
+      <table class="table table-sm align-middle">
+        <thead class="table-light"><tr><th>申请人</th><th>设备</th><th>数量</th><th>操作</th></tr></thead>
+        <tbody>
+          {% for r in approved_records %}
+          <tr>
+            <td>{{ r.user_name }}</td>
+            <td>{{ r.equipment.name }}</td>
+            <td>{{ r.quantity }}</td>
+            <td>
+              <form method="post" action="/admin/confirm_pickup/{{ r.id }}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-primary">确认借出 (已领取)</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" class="text-muted text-center">无待领取记录</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <h5 class="mt-4">借出中 / 维修中</h5>
+    <div class="table-responsive mb-4">
+      <table class="table table-sm align-middle">
+        <thead class="table-light"><tr><th>借用人</th><th>设备</th><th>数量</th><th>借出时间</th><th>应还时间</th><th>状态</th><th>操作</th></tr></thead>
+        <tbody>
+          {% for r in borrowed_records %}
+          <tr>
+            <td>{{ r.user_name }}</td>
+            <td>{{ r.equipment.name }}</td>
+            <td>{{ r.quantity }}</td>
+            <td>{{ r.borrow_date.strftime('%Y-%m-%d %H:%M') if r.borrow_date else '' }}</td>
+            <td>{{ r.due_date.strftime('%Y-%m-%d %H:%M') if r.due_date else '' }}</td>
+            <td>
+                {% if r.status == 'repair_pending' %}
+                <span class="badge bg-warning text-dark">报修中</span>
+                {% else %}
+                <span class="badge bg-info text-dark">借出中</span>
+                {% endif %}
+            </td>
+            <td>
+              <!-- Return Modal Trigger -->
+              <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#returnModal{{ r.id }}">
+                归还
+              </button>
+              
+              <!-- Return Modal -->
+              <div class="modal fade" id="returnModal{{ r.id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-sm">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h6 class="modal-title">归还确认</h6>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form method="post" action="/return">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <input type="hidden" name="record_id" value="{{ r.id }}">
+                      <div class="modal-body">
+                        <p>确认归还 {{ r.equipment.name }} x {{ r.quantity }}?</p>
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" name="is_damaged" id="damaged{{ r.id }}">
+                          <label class="form-check-label" for="damaged{{ r.id }}">
+                            器材损坏 (赔偿 1.5 倍)
+                          </label>
+                        </div>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-success btn-sm">确认归还</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7" class="text-muted text-center">无借出记录</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
     <h5 class="mt-4">设备管理</h5>
     <div class="table-responsive">
       <table class="table table-sm align-middle">
-        <thead class="table-light"><tr><th>名称</th><th style="width:140px;">总量（编辑）</th><th style="width:120px;">可借</th><th style="width:140px;">操作</th></tr></thead>
+        <thead class="table-light"><tr><th>名称</th><th style="width:140px;">总量</th><th style="width:120px;">价格</th><th style="width:120px;">可借</th><th style="width:140px;">操作</th></tr></thead>
         <tbody>
           {% for e in equipments %}
           <tr id="e{{ e.id }}">
             <td>{{ e.name }}</td>
+            <form method="post" action="/admin/edit_equipment/{{ e.id }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <td>
-              <form method="post" action="/admin/edit_equipment/{{ e.id }}" class="d-flex gap-2">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <input type="number" name="total" class="form-control form-control-sm" value="{{ e.total_quantity }}" style="width:100px;">
-                <button class="btn btn-sm btn-outline-primary"><i class="bi bi-save"></i> 保存</button>
-              </form>
+                <input type="number" name="total" class="form-control form-control-sm" value="{{ e.total_quantity }}" style="width:80px;">
+            </td>
+            <td>
+                <input type="number" name="price" class="form-control form-control-sm" value="{{ e.price or 0 }}" style="width:80px;" step="0.01">
             </td>
             <td><span class="fw-bold">{{ e.available_quantity }}</span></td>
             <td>
-              <form method="post" action="/admin/delete_equipment/{{ e.id }}" onsubmit="return confirm('确认删除该设备？');" class="d-inline">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> 删除</button>
-              </form>
+                <button class="btn btn-sm btn-outline-primary"><i class="bi bi-save"></i> 保存</button>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="if(confirm('确认删除？')) { document.getElementById('del{{ e.id }}').submit(); }"><i class="bi bi-trash"></i> 删除</button>
             </td>
+            </form>
+            <form id="del{{ e.id }}" method="post" action="/admin/delete_equipment/{{ e.id }}" style="display:none;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            </form>
           </tr>
           {% endfor %}
         </tbody>

@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import csv
@@ -327,13 +326,14 @@ def create_app(config_name: str | None = None, test_config: dict | None = None):
             return redirect(url_for('admin'))
         try:
             total = int(request.form.get('total', 1))
+            price = float(request.form.get('price', 0.0))
         except (TypeError, ValueError):
-            flash('总量格式不正确', 'error')
+            flash('数值格式不正确', 'error')
             return redirect(url_for('admin'))
-        eq = Equipment(name=name, total_quantity=total, available_quantity=total)
+        eq = Equipment(name=name, total_quantity=total, available_quantity=total, price=price)
         db.session.add(eq)
         db.session.commit()
-        flash(f'已添加设备：{name}（总量 {total}）', 'success')
+        flash(f'已添加设备：{name}（总量 {total}，价格 {price}）', 'success')
         return redirect(url_for('admin', added_id=eq.id))
 
     @app.route('/borrow', methods=['POST'])
@@ -360,7 +360,7 @@ def create_app(config_name: str | None = None, test_config: dict | None = None):
                 user_name=user_name,
                 user=user,
             )
-            flash(f'借出成功：{user_name} 借用 {quantity} 件设备', 'success')
+            flash(f'申请已提交，请等待管理员审核。', 'success')
         except BorrowServiceError as exc:
             flash(str(exc), 'error')
         return redirect(request.referrer or (url_for('catalog') if user else url_for('index')))
@@ -432,9 +432,20 @@ def create_app(config_name: str | None = None, test_config: dict | None = None):
         user = getattr(g, 'current_user', None)
         borrows_q = BorrowRecord.query.filter_by(user_id=user.id)
         total_borrows = borrows_q.count()
-        outstanding = borrows_q.filter(BorrowRecord.return_date.is_(None)).count()
+        
+        pending = borrows_q.filter_by(status='pending').count()
+        approved = borrows_q.filter_by(status='approved').count()
+        borrowed = borrows_q.filter(BorrowRecord.status.in_(['borrowed', 'repair_pending'])).count()
+        returned = borrows_q.filter_by(status='returned').count()
+        
         recent = borrows_q.order_by(BorrowRecord.borrow_date.desc()).limit(50).all()
-        return render_template('profile.html', user=user, borrows=recent, total_borrows=total_borrows, outstanding=outstanding)
+        
+        return render_template('profile.html', user=user, borrows=recent, 
+                               total_borrows=total_borrows, 
+                               pending=pending, 
+                               approved=approved, 
+                               borrowed=borrowed,
+                               returned=returned)
 
     @app.route('/profile/edit', methods=['GET', 'POST'])
     @login_required
@@ -455,12 +466,18 @@ def create_app(config_name: str | None = None, test_config: dict | None = None):
         user = getattr(g, 'current_user', None)
         try:
             record_id = int(request.form.get('record_id', 0))
+            is_damaged = bool(request.form.get('is_damaged'))
         except (TypeError, ValueError):
             flash('无效的借用记录', 'error')
             return redirect(request.referrer or url_for('catalog'))
         try:
-            borrow_service.return_record(record_id=record_id, acting_user=user)
-            flash('归还成功', 'success')
+            result = borrow_service.return_record(record_id=record_id, acting_user=user, is_damaged=is_damaged)
+            msg = '归还成功'
+            if result.record.fine > 0:
+                msg += f'，产生逾期罚款 {result.record.fine} 元'
+            if result.record.damage_cost > 0:
+                msg += f'，产生损坏赔偿 {result.record.damage_cost} 元'
+            flash(msg, 'success')
         except BorrowServiceError as exc:
             flash(str(exc), 'error')
         return redirect(request.referrer or url_for('catalog'))
@@ -555,6 +572,10 @@ def create_app(config_name: str | None = None, test_config: dict | None = None):
         equipments = []
         users = []
         news_items = []
+        pending_records = []
+        approved_records = []
+        borrowed_records = []
+        
         if is_admin:
             equipments = Equipment.query.order_by(Equipment.name).all()
             q = request.args.get('q', '').strip()
@@ -567,7 +588,14 @@ def create_app(config_name: str | None = None, test_config: dict | None = None):
                 )
             users = user_query.order_by(User.username).all()
             news_items = NewsPost.query.order_by(NewsPost.published_at.desc()).all()
-        return render_template('admin.html', is_admin=is_admin, equipments=equipments, users=users, news_items=news_items)
+            
+            # Fetch records by status
+            pending_records = BorrowRecord.query.filter_by(status='pending').order_by(BorrowRecord.borrow_date.desc()).all()
+            approved_records = BorrowRecord.query.filter_by(status='approved').order_by(BorrowRecord.borrow_date.desc()).all()
+            borrowed_records = BorrowRecord.query.filter(BorrowRecord.status.in_(['borrowed', 'repair_pending'])).order_by(BorrowRecord.borrow_date.desc()).all()
+
+        return render_template('admin.html', is_admin=is_admin, equipments=equipments, users=users, news_items=news_items,
+                               pending_records=pending_records, approved_records=approved_records, borrowed_records=borrowed_records)
 
     @app.route('/admin/user/<int:user_id>')
     @admin_required
@@ -603,11 +631,14 @@ def create_app(config_name: str | None = None, test_config: dict | None = None):
             return redirect(url_for('admin'))
         try:
             total = int(request.form.get('total', eq.total_quantity))
+            price = float(request.form.get('price', eq.price or 0.0))
         except (ValueError, TypeError):
             total = eq.total_quantity
+            price = eq.price
         diff = total - eq.total_quantity
         eq.total_quantity = total
         eq.available_quantity = max(0, eq.available_quantity + diff)
+        eq.price = price
         db.session.commit()
         flash('设备已更新', 'success')
         return redirect(url_for('admin'))
@@ -662,6 +693,52 @@ def create_app(config_name: str | None = None, test_config: dict | None = None):
             return jsonify(result.record.to_dict())
         except BorrowServiceError as exc:
             return jsonify({'error': str(exc)}), 400
+
+    @app.route('/admin/approve_borrow/<int:record_id>', methods=['POST'])
+    @admin_required
+    def admin_approve_borrow(record_id: int):
+        try:
+            borrow_service.approve_request(record_id=record_id)
+            flash('审核通过，请通知学生携带证件领取器材', 'success')
+        except BorrowServiceError as exc:
+            flash(str(exc), 'error')
+        return redirect(request.referrer or url_for('admin'))
+
+    @app.route('/admin/reject_borrow/<int:record_id>', methods=['POST'])
+    @admin_required
+    def admin_reject_borrow(record_id: int):
+        try:
+            borrow_service.reject_request(record_id=record_id)
+            flash('申请已拒绝', 'success')
+        except BorrowServiceError as exc:
+            flash(str(exc), 'error')
+        return redirect(request.referrer or url_for('admin'))
+
+    @app.route('/admin/confirm_pickup/<int:record_id>', methods=['POST'])
+    @admin_required
+    def admin_confirm_pickup(record_id: int):
+        try:
+            borrow_service.confirm_pickup(record_id=record_id)
+            flash('确认借出成功', 'success')
+        except BorrowServiceError as exc:
+            flash(str(exc), 'error')
+        return redirect(request.referrer or url_for('admin'))
+
+    @app.route('/report_repair', methods=['POST'])
+    @login_required
+    def report_repair():
+        user = getattr(g, 'current_user', None)
+        try:
+            record_id = int(request.form.get('record_id', 0))
+        except (TypeError, ValueError):
+            flash('无效的记录', 'error')
+            return redirect(request.referrer or url_for('records'))
+        try:
+            borrow_service.report_repair(record_id=record_id, acting_user=user)
+            flash('报修成功，请将器材归还至体育器材室', 'success')
+        except BorrowServiceError as exc:
+            flash(str(exc), 'error')
+        return redirect(request.referrer or url_for('records'))
 
     return app
 

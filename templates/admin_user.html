@@ -44,14 +44,38 @@
     <h5 class="mt-4">借阅记录</h5>
     <div class="table-responsive">
       <table class="table table-sm align-middle">
-        <thead class="table-light"><tr><th>时间</th><th>设备</th><th>数量</th><th>状态</th></tr></thead>
+        <thead class="table-light"><tr><th>时间</th><th>设备</th><th>数量</th><th>状态</th><th>费用</th></tr></thead>
         <tbody>
           {% for r in records %}
           <tr>
-            <td class="small text-muted">{{ r.borrow_date }}</td>
+            <td class="small text-muted">{{ r.borrow_date.strftime('%Y-%m-%d %H:%M') if r.borrow_date else 'Pending' }}</td>
             <td>{{ r.equipment.name if r.equipment else '已删除' }}</td>
             <td>{{ r.quantity }}</td>
-            <td>{% if r.return_date %}<span class="badge bg-success">已归还</span>{% else %}<span class="badge bg-warning text-dark">未归还</span>{% endif %}</td>
+            <td>
+              {% if r.status == 'pending' %}
+                <span class="badge bg-secondary">待审核</span>
+              {% elif r.status == 'approved' %}
+                <span class="badge bg-primary">已通过 (待领取)</span>
+              {% elif r.status == 'rejected' %}
+                <span class="badge bg-danger">已拒绝</span>
+              {% elif r.status == 'borrowed' %}
+                <span class="badge bg-info text-dark">借出中</span>
+              {% elif r.status == 'returned' %}
+                <span class="badge bg-success">已归还</span>
+              {% elif r.status == 'repair_pending' %}
+                <span class="badge bg-warning text-dark">报修中</span>
+              {% else %}
+                <span class="badge bg-secondary">{{ r.status }}</span>
+              {% endif %}
+            </td>
+            <td>
+                {% if r.fine > 0 %}
+                <div class="text-danger small">罚款: {{ r.fine }}</div>
+                {% endif %}
+                {% if r.damage_cost > 0 %}
+                <div class="text-danger small">赔偿: {{ r.damage_cost }}</div>
+                {% endif %}
+            </td>
           </tr>
           {% endfor %}
         </tbody>

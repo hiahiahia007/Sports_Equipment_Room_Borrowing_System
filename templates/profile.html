@@ -18,7 +18,7 @@
           <div class="row my-3 g-2">
             <div class="col-auto">
               <div class="card p-2 text-center">
-                <div class="small text-muted">总申请次数</div>
+                <div class="small text-muted">总申请</div>
                 <div class="h5 mb-0">{{ total_borrows }}</div>
               </div>
             </div>
@@ -31,49 +31,59 @@
             <div class="col-auto">
               <div class="card p-2 text-center">
                 <div class="small text-muted">待取件</div>
-                <div class="h5 mb-0 text-info">{{ awaiting_pickup }}</div>
+                <div class="h5 mb-0 text-info">{{ approved }}</div>
               </div>
             </div>
             <div class="col-auto">
               <div class="card p-2 text-center">
                 <div class="small text-muted">借出中</div>
-                <div class="h5 mb-0 text-primary">{{ active }}</div>
-              </div>
-            </div>
-            <div class="col-auto">
-              <div class="card p-2 text-center">
-                <div class="small text-muted">待归还</div>
-                <div class="h5 mb-0 text-danger">{{ outstanding }}</div>
+                <div class="h5 mb-0 text-primary">{{ borrowed }}</div>
               </div>
             </div>
           </div>
         <div class="table-responsive">
           <table class="table table-sm align-middle">
-            <thead class="table-light"><tr><th>申请时间</th><th>设备</th><th>数量</th><th>状态</th><th></th></tr></thead>
+            <thead class="table-light"><tr><th>申请时间</th><th>设备</th><th>数量</th><th>截止</th><th>状态</th><th></th></tr></thead>
             <tbody>
               {% for r in borrows %}
               <tr>
-                <td class="small text-muted">{{ r.requested_at }}</td>
+                <td class="small text-muted">{{ r.borrow_date.strftime('%Y-%m-%d %H:%M') if r.borrow_date else 'Pending' }}</td>
                 <td>{{ r.equipment.name if r.equipment else '已删除' }}</td>
                 <td>{{ r.quantity }}</td>
-                <td>
-                  {% set meta = borrow_status_meta.get(r.status, {'label':'未知','badge':'secondary'}) %}
-                  <span class="badge bg-{{ meta.badge }}">{{ meta.label }}</span>
+                <td class="small text-muted">
+                  {% if r.due_date %}
+                    {{ r.due_date.strftime('%Y-%m-%d') }}
+                  {% else %}
+                    -
+                  {% endif %}
                 </td>
                 <td>
-                  {% if r.status in ['pending','approved'] %}
-                    <form method="post" action="{{ url_for('cancel_borrow', record_id=r.id) }}" class="d-inline">
-                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                      <button class="btn btn-sm btn-outline-secondary">撤销</button>
-                    </form>
-                  {% elif r.status == 'checked_out' %}
-                    <form method="post" action="/return" class="d-inline">
+                  {% if r.status == 'pending' %}
+                    <span class="badge bg-secondary">待审核</span>
+                  {% elif r.status == 'approved' %}
+                    <span class="badge bg-primary">已通过 (待领取)</span>
+                  {% elif r.status == 'rejected' %}
+                    <span class="badge bg-danger">已拒绝</span>
+                  {% elif r.status == 'borrowed' %}
+                    <span class="badge bg-info text-dark">借出中</span>
+                  {% elif r.status == 'returned' %}
+                    <span class="badge bg-success">已归还</span>
+                  {% elif r.status == 'repair_pending' %}
+                    <span class="badge bg-warning text-dark">报修中</span>
+                  {% else %}
+                    <span class="badge bg-secondary">{{ r.status }}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if r.status == 'borrowed' %}
+                    <form method="post" action="/report_repair" class="d-inline" onsubmit="return confirm('确认报修？报修后请将器材归还至体育器材室。');">
                       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                       <input type="hidden" name="record_id" value="{{ r.id }}">
-                      <button class="btn btn-sm btn-outline-success"><i class="bi bi-arrow-return-left"></i> 归还</button>
+                      <button class="btn btn-sm btn-outline-warning">报修</button>
                     </form>
-                  {% else %}
-                    <span class="text-muted small">{{ r.return_date or meta.hint }}</span>
+                  {% endif %}
+                  {% if r.status == 'approved' %}
+                    <span class="text-muted small">请携带证件领取</span>
                   {% endif %}
                 </td>
               </tr>

@@ -73,9 +73,12 @@
               <input type="number" name="quantity" class="form-control" value="1" min="1" max="{{ e.available_quantity }}">
             </div>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-            <button type="submit" class="btn btn-primary">确认借用</button>
+          <div class="modal-footer flex-column align-items-stretch">
+            <div class="w-100 small text-muted mb-2">审批通过后 7 天内需归还，逾期将按天收取滞纳金。</div>
+            <div class="w-100 d-flex gap-2">
+              <button type="button" class="btn btn-secondary w-50" data-bs-dismiss="modal">取消</button>
+              <button type="submit" class="btn btn-primary w-50">提交申请</button>
+            </div>
           </div>
         </form>
       </div>

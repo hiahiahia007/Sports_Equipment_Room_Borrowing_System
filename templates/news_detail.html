@@ -15,8 +15,8 @@
 
 {% block content %}
 <article class="news-detail article-card">
-  <div class="article-body">
-    {{ news.content | e | replace('\n', '<br>') | safe }}
+  <div class="article-body" style="white-space: pre-wrap;">
+    {{ news.content }}
   </div>
 </article>
 

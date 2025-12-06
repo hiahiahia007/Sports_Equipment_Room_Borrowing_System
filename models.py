@@ -11,6 +11,7 @@ class Equipment(db.Model):
     name = db.Column(db.String(120), nullable=False)
     total_quantity = db.Column(db.Integer, nullable=False, default=1)
     available_quantity = db.Column(db.Integer, nullable=False, default=1)
+    price = db.Column(db.Float, nullable=False, default=0.0)
 
     def to_dict(self):
         return {
@@ -18,6 +19,7 @@ class Equipment(db.Model):
             'name': self.name,
             'total_quantity': self.total_quantity,
             'available_quantity': self.available_quantity,
+            'price': self.price,
         }
 
 class User(db.Model):
@@ -52,9 +54,19 @@ class BorrowRecord(db.Model):
     user = db.relationship('User', backref=db.backref('borrow_records', lazy=True))
     user_name = db.Column(db.String(120), nullable=False)
     quantity = db.Column(db.Integer, nullable=False)
+    
+    # Status: pending, approved, rejected, borrowed, returned, repair_pending
+    status = db.Column(db.String(20), nullable=False, default='borrowed')
+    
     # use timezone-aware UTC timestamps
     borrow_date = db.Column(db.DateTime, default=lambda: datetime.datetime.now(timezone.utc))
+    due_date = db.Column(db.DateTime, nullable=True)
     return_date = db.Column(db.DateTime, nullable=True)
+    
+    # Fees
+    fine = db.Column(db.Float, default=0.0)
+    damage_cost = db.Column(db.Float, default=0.0)
+    is_damaged = db.Column(db.Boolean, default=False)
 
     def to_dict(self):
         return {
@@ -64,8 +76,13 @@ class BorrowRecord(db.Model):
             'user_name': self.user_name,
             'user_id': self.user_id,
             'quantity': self.quantity,
+            'status': self.status,
             'borrow_date': self.borrow_date.isoformat() if self.borrow_date else None,
+            'due_date': self.due_date.isoformat() if self.due_date else None,
             'return_date': self.return_date.isoformat() if self.return_date else None,
+            'fine': self.fine,
+            'damage_cost': self.damage_cost,
+            'is_damaged': self.is_damaged,
         }
 
 
