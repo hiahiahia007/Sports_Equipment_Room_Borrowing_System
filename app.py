@@ -29,6 +29,13 @@ from services.auth import (
 )
 from services.borrowing import BorrowService, BorrowServiceError
 from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.utils import secure_filename
+
+UPLOAD_FOLDER = os.path.join('static', 'equipment_images')
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 NEWS_CATEGORY_LABELS = {
@@ -330,7 +337,18 @@ def create_app(config_name: str | None = None, test_config: dict | None = None):
         except (TypeError, ValueError):
             flash('数值格式不正确', 'error')
             return redirect(url_for('admin'))
-        eq = Equipment(name=name, total_quantity=total, available_quantity=total, price=price)
+        
+        image_file = 'default.jpg'
+        if 'image' in request.files:
+            file = request.files['image']
+            if file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                import time
+                filename = f"{int(time.time())}_{filename}"
+                file.save(os.path.join(UPLOAD_FOLDER, filename))
+                image_file = filename
+
+        eq = Equipment(name=name, total_quantity=total, available_quantity=total, price=price, image_file=image_file)
         db.session.add(eq)
         db.session.commit()
         flash(f'已添加设备：{name}（总量 {total}，价格 {price}）', 'success')
@@ -635,6 +653,16 @@ def create_app(config_name: str | None = None, test_config: dict | None = None):
         except (ValueError, TypeError):
             total = eq.total_quantity
             price = eq.price
+        
+        if 'image' in request.files:
+            file = request.files['image']
+            if file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                import time
+                filename = f"{int(time.time())}_{filename}"
+                file.save(os.path.join(UPLOAD_FOLDER, filename))
+                eq.image_file = filename
+
         diff = total - eq.total_quantity
         eq.total_quantity = total
         eq.available_quantity = max(0, eq.available_quantity + diff)

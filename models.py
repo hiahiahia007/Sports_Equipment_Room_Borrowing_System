@@ -12,6 +12,7 @@ class Equipment(db.Model):
     total_quantity = db.Column(db.Integer, nullable=False, default=1)
     available_quantity = db.Column(db.Integer, nullable=False, default=1)
     price = db.Column(db.Float, nullable=False, default=0.0)
+    image_file = db.Column(db.String(120), nullable=True, default='default.jpg')
 
     def to_dict(self):
         return {
@@ -20,6 +21,7 @@ class Equipment(db.Model):
             'total_quantity': self.total_quantity,
             'available_quantity': self.available_quantity,
             'price': self.price,
+            'image_file': self.image_file,
         }
 
 class User(db.Model):
